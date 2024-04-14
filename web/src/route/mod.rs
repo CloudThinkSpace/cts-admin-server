@@ -3,7 +3,13 @@ use axum::response::IntoResponse;
 use axum::Router;
 use axum::routing::get;
 use response_utils::res::ResResult;
-use crate::route::base::login;
+use crate::route::base::login_route;
+use crate::route::sys::sys_api::api_route;
+use crate::route::sys::sys_domain::domain_route;
+use crate::route::sys::sys_menu::menu_route;
+use crate::route::sys::sys_permission::permission_route;
+use crate::route::sys::sys_role::role_route;
+use crate::route::sys::sys_user::user_route;
 
 pub mod sys;
 pub mod base;
@@ -23,13 +29,28 @@ pub fn api() -> Router {
 
 /// 需要认证api
 fn auth_api() -> Router {
+    let router = Router::new()
+        // 合并用户路由
+        .merge(user_route())
+        // 合并菜单路由
+        .merge(menu_route())
+        // 合并角色路由
+        .merge(role_route())
+        // 合并区域路由
+        .merge(domain_route())
+        // 合并api路由
+        .merge(api_route())
+        // 合并权限路由
+        .merge(permission_route())
+        ;
     Router::new()
+        .nest("/sys", router)
 }
 
 /// 无需认证api
 fn no_auth_api() -> Router {
     Router::new()
-        .merge(login())
+        .merge(login_route())
 }
 
 /// 服务错误处理函数
