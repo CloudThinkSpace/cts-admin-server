@@ -1,11 +1,8 @@
-mod log;
 use tracing::info;
 use crate::route::api;
 
 /// 启动服务
 pub async  fn start() {
-    // 日志初始化
-    log::init_log();
     // 系统api
     let app = api();
     // 监听

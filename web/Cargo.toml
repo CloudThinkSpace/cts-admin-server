@@ -5,8 +5,11 @@ edition.workspace = true
 authors.workspace = true
 
 [dependencies]
+entity.workspace = true
 axum.workspace = true
 tokio = { workspace = true, features = ["full"] }
+tower.workspace = true
 tracing.workspace = true
 tracing-subscriber = {workspace=true}
 response_utils.workspace = true
+sea-orm = { workspace = true, features = ["macros", "sqlx-postgres", "runtime-tokio-rustls"] }

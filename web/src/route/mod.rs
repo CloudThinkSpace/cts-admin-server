@@ -5,7 +5,7 @@ use axum::routing::get;
 use response_utils::res::ResResult;
 use crate::route::base::login_route;
 use crate::route::sys::sys_api::api_route;
-use crate::route::sys::sys_domain::domain_route;
+use crate::route::sys::sys_tenant::domain_route;
 use crate::route::sys::sys_menu::menu_route;
 use crate::route::sys::sys_permission::permission_route;
 use crate::route::sys::sys_role::role_route;
@@ -19,7 +19,7 @@ pub mod base;
 /// 该api包含授权和非授权
 pub fn api() -> Router {
     Router::new()
-        // 合并非认证api
+        // 合并无需认证api
         .merge(no_auth_api())
         // 合并需要认证api
         .merge(auth_api())
@@ -29,6 +29,7 @@ pub fn api() -> Router {
 
 /// 需要认证api
 fn auth_api() -> Router {
+
     let router = Router::new()
         // 合并用户路由
         .merge(user_route())
@@ -41,8 +42,8 @@ fn auth_api() -> Router {
         // 合并api路由
         .merge(api_route())
         // 合并权限路由
-        .merge(permission_route())
-        ;
+        .merge(permission_route());
+
     Router::new()
         .nest("/sys", router)
 }
