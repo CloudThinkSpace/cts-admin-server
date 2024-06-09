@@ -6,6 +6,8 @@ authors.workspace = true
 
 [dependencies]
 entity.workspace = true
+common.workspace = true
+models.workspace = true
 axum.workspace = true
 tokio = { workspace = true, features = ["full"] }
 tower.workspace = true

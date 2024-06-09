@@ -10,7 +10,7 @@ pub fn user_route() -> Router {
         .route("/add", post(sys_user::add))
         .route("/update", post(sys_user::update))
         .route("/delete", get(sys_user::delete))
-        .route("/query", get(sys_user::query))
+        .route("/query/:id", get(sys_user::query))
         .route("/search", post(sys_user::search));
 
     Router::new()
