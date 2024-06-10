@@ -1,6 +1,6 @@
+use chrono::Local;
+use sea_orm::Statement;
 use sea_orm_migration::prelude::*;
-use crate::sys::sys_tenant::SysTenant;
-use crate::sys::sys_user::SysUser;
 
 #[derive(DeriveIden)]
 pub enum SysRole {
@@ -40,18 +40,18 @@ impl SysRole {
                     )
                     .col(ColumnDef::new(SysRole::Name).string().not_null())
                     .col(ColumnDef::new(SysRole::Enabled).integer().not_null().default(0))
-                    .col(ColumnDef::new(SysRole::TenantId).string().not_null())
+                    .col(ColumnDef::new(SysRole::TenantId).string())
                     .col(ColumnDef::new(SysRole::Description).string())
                     .col(ColumnDef::new(SysRole::Remark).string())
                     .col(ColumnDef::new(SysRole::CreatedAt).timestamp().not_null())
                     .col(ColumnDef::new(SysRole::UpdatedAt).timestamp())
                     .col(ColumnDef::new(SysRole::DeletedAt).timestamp())
-                    .foreign_key(
-                        ForeignKey::create()
-                            .name("fk_role_tenant_id")
-                            .from(SysUser::Table, SysUser::TenantId)
-                            .to(SysTenant::Table, SysTenant::Id)
-                    )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_role_tenant_id")
+                    //         .from(SysRole::Table, SysRole::TenantId)
+                    //         .to(SysTenant::Table, SysTenant::Id)
+                    // )
                     .to_owned(),
             )
             .await
@@ -59,6 +59,33 @@ impl SysRole {
 
     pub async fn drop_table(manager: &SchemaManager<'_>)-> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(SysRole::Table).to_owned()).await
+            .drop_table(Table::drop().table(SysRole::Table).to_owned()).await?;
+        // manager
+        //     .drop_foreign_key(
+        //         ForeignKey::drop().table(SysRole::Table).name("fk_role_tenant_id").to_owned()).await?;
+
+        Ok(())
+    }
+
+    pub async fn insert(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+
+        let db = manager.get_connection();
+        // 生成时间戳
+        let now = Local::now().naive_local();
+        let stmt_role = Statement::from_sql_and_values(
+            manager.get_database_backend(),
+            "
+        INSERT INTO sys_role
+        (id, name, created_at)
+        VALUES ($1,$2,$3)
+        ",
+            [
+                "1".into(),
+                "超级管理员".into(),
+                now.into()
+            ]
+        );
+        db.execute(stmt_role).await?;
+        Ok(())
     }
 }

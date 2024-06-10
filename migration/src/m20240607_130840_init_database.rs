@@ -1,5 +1,5 @@
 use sea_orm_migration::prelude::*;
-use crate::sys::{create_tables, drop_tables};
+use crate::sys::{create_tables, drop_tables, insert_data};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -8,6 +8,8 @@ pub struct Migration;
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         create_tables(manager).await?;
+        // 数据初始化
+        insert_data(manager).await?;
         Ok(())
     }
 

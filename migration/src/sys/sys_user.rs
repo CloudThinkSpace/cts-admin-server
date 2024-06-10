@@ -1,5 +1,7 @@
+use chrono::Local;
+use sea_orm::Statement;
 use sea_orm_migration::prelude::*;
-use crate::sys::sys_tenant::SysTenant;
+use common::md5;
 
 #[derive(DeriveIden)]
 pub enum SysUser {
@@ -16,7 +18,7 @@ pub enum SysUser {
     Phone,
     // 邮箱
     Email,
-    // 状态
+    // 状态,是否可用，0可用，1停用
     Status,
     // 描述
     Description,
@@ -55,17 +57,11 @@ impl SysUser {
                     .col(ColumnDef::new(SysUser::Status).integer().not_null().default(0))
                     .col(ColumnDef::new(SysUser::Remark).string())
                     .col(ColumnDef::new(SysUser::Description).string())
-                    .col(ColumnDef::new(SysUser::Avatar).string_len(300))
+                    .col(ColumnDef::new(SysUser::Avatar).string())
                     .col(ColumnDef::new(SysUser::CreatedAt).timestamp().not_null())
                     .col(ColumnDef::new(SysUser::UpdatedAt).timestamp())
                     .col(ColumnDef::new(SysUser::DeletedAt).timestamp())
-                    .col(ColumnDef::new(SysUser::TenantId).string().not_null())
-                    .foreign_key(
-                        ForeignKey::create()
-                            .name("fk_user_tenant_id")
-                            .from(SysUser::Table, SysUser::TenantId)
-                            .to(SysTenant::Table, SysTenant::Id)
-                    )
+                    .col(ColumnDef::new(SysUser::TenantId).string())
                     .to_owned(),
             )
             .await
@@ -73,6 +69,34 @@ impl SysUser {
 
     pub async fn drop_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(SysUser::Table).to_owned()).await
+            .drop_table(Table::drop().table(SysUser::Table).to_owned()).await?;
+        Ok(())
+    }
+
+    pub async fn insert(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+
+        let db = manager.get_connection();
+        // 生成时间戳
+        let now = Local::now().naive_local();
+
+        let stmt_user = Statement::from_sql_and_values(
+            manager.get_database_backend(),
+            "
+        INSERT INTO sys_user
+        (id, username, nickname, phone, email, password, created_at)
+        VALUES ($1,$2,$3,$4,$5,$6,$7)
+        ",
+            [
+                "1".into(),
+                "admin".into(),
+                "超级管理员".into(),
+                "18911797115".into(),
+                "tanghy@cloudthink.space".into(),
+                md5::generate_md5("123456".to_string()).into(),
+                now.into()
+            ]
+        );
+        db.execute(stmt_user).await?;
+        Ok(())
     }
 }
