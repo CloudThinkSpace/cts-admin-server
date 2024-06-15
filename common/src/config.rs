@@ -16,11 +16,11 @@ pub struct Database {
     pub url: String,
     // 连接池最大连接数
     pub max_connections: u32,
-    // 连接池最小连接数
+    // 最小空闲连接数
     pub min_connections: u32,
     // 连接数据库超时时间（秒）
     pub connect_timeout: u64,
-    // 查询数据超时时间（秒）
+    // 空闲连接存活最大时间，默认10分钟
     pub idle_timeout: u64,
     // 连接存活时间（秒）
     pub max_lifetime: u64,

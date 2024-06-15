@@ -62,6 +62,8 @@ impl SysUser {
                     .col(ColumnDef::new(SysUser::UpdatedAt).timestamp())
                     .col(ColumnDef::new(SysUser::DeletedAt).timestamp())
                     .col(ColumnDef::new(SysUser::TenantId).string())
+                    // 创建主键
+                    .index(Index::create().table(SysUser::Table).name("unique_user_username").unique())
                     .to_owned(),
             )
             .await

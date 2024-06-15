@@ -1,4 +1,4 @@
-use sea_orm::{ActiveModelTrait, ConnectionTrait, DbErr};
+use sea_orm::{DbErr};
 use sea_orm_migration::SchemaManager;
 use crate::sys::sys_api::SysApi;
 use crate::sys::sys_menu::SysMenu;

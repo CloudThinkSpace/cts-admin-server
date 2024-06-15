@@ -10,3 +10,4 @@ sea-orm.workspace = true
 sea-orm-migration.workspace = true
 tokio = {workspace = true, features = ["sync"]}
 rust-crypto.workspace = true
+tracing.workspace = true

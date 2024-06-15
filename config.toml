@@ -1,10 +1,10 @@
 [database]
-url="postgres://cloudthink:cloudthink@localhost/cts?currentSchema=public"
+url="postgres://cloudthink:cloudthink@localhost/cts"
 max_connections=100
 min_connections=5
-connect_timeout=8
-idle_timeout=8
-max_lifetime=8
+connect_timeout=30
+idle_timeout=600
+max_lifetime=1800
 sqlx_logging=true
 [log]
 debug=true

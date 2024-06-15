@@ -19,25 +19,10 @@ pub struct Model {
     pub created_at: DateTime,
     pub updated_at: Option<DateTime>,
     pub deleted_at: Option<DateTime>,
-    pub tenant_id: String,
+    pub tenant_id: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {
-    #[sea_orm(
-        belongs_to = "super::sys_tenant::Entity",
-        from = "Column::TenantId",
-        to = "super::sys_tenant::Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
-    SysTenant,
-}
-
-impl Related<super::sys_tenant::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::SysTenant.def()
-    }
-}
+pub enum Relation {}
 
 impl ActiveModelBehavior for ActiveModel {}

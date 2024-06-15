@@ -1,6 +1,5 @@
 use std::time::Duration;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
-use sea_orm_migration::SchemaManager;
 use tokio::sync::OnceCell;
 use crate::config::Config;
 static GLOBAL_DB: OnceCell<DatabaseConnection> = OnceCell::const_new();
@@ -22,8 +21,4 @@ pub async fn get_init_db_pool(config: &Config) -> DatabaseConnection {
         .sqlx_logging(true);
 
     Database::connect(opt).await.expect("连接数据库失败")
-}
-
-pub async fn execute_insert(manager: &SchemaManager<'_>, ) {
-
 }

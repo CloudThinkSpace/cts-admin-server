@@ -15,6 +15,5 @@ pub struct User {
     pub avatar: Option<String>,
     pub created_at: DateTime,
     pub updated_at: Option<DateTime>,
-    pub deleted_at: Option<DateTime>,
     pub tenant_id: Option<String>,
 }
