@@ -34,5 +34,8 @@ pub struct AddUserDto {
 pub struct SearchUserDto {
     pub username: Option<String>,
     pub nickname: Option<String>,
+    pub tenant_id: Option<String>,
+    pub description: Option<String>,
+    pub remark: Option<String>,
     pub page: Option<Page>,
 }

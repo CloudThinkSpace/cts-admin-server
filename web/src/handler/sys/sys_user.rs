@@ -3,8 +3,8 @@ use axum::extract::{Path, Query};
 use axum::Json;
 use axum::response::IntoResponse;
 use response_utils::res::ResResult;
-use common::FORCE;
-use models::dto::sys::request_sys_user::{AddUserDto, SearchUserDto, UpdateUserDto, UpdateUserStatusDto};
+use models::dto::sys::request::sys_user::{AddUserDto, SearchUserDto, UpdateUserDto, UpdateUserStatusDto};
+use crate::handler::handler_force;
 use crate::service::sys::sys_user;
 
 /// 添加用户函数
@@ -46,18 +46,7 @@ pub async fn update(Path(id): Path<String>, Json(data): Json<UpdateUserDto>) -> 
 pub async fn delete(Path(id): Path<String>, Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
 
     // 判断是否真删除
-    let force = match params.get(FORCE) {
-        None => {
-            false
-        }
-        Some(data) => {
-            if data == "true" {
-                true
-            } else {
-                false
-            }
-        }
-    };
+    let force= handler_force(params);
     let result = sys_user::delete_by_id(id, force).await;
     match result {
         Ok(data) => {

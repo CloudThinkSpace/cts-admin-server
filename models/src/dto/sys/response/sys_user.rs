@@ -3,7 +3,7 @@ use sea_orm::prelude::DateTime;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, FromQueryResult)]
-pub struct User {
+pub struct ResponseUser {
     pub id: String,
     pub username: String,
     pub nickname: String,
