@@ -9,8 +9,6 @@ pub struct Page {
     pub page_no: Option<u64>,
     // 分页大小
     pub page_size: Option<u64>,
-    // 排序
-    pub orders: Option<Vec<Order>>,
 }
 
 #[derive(Deserialize, Debug, Default, Serialize)]
@@ -41,7 +39,9 @@ pub struct Order {
     pub sort: Option<String>,
 }
 
-pub fn parse_page(page: Option<Page>) -> (u64, u64) {
+/// 处理分页相关参数
+/// return 返回元组，页码和分页大小
+pub fn handler_page(page: Option<Page>) -> (u64, u64) {
     if page.is_none() {
         (1, 10)
     } else {

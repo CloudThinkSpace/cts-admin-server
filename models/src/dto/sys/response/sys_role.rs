@@ -3,6 +3,7 @@ use sea_orm::prelude::DateTime;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, FromQueryResult)]
+#[serde(rename_all = "camelCase")]
 pub struct ResponseRole {
     pub id: String,
     pub name: String,

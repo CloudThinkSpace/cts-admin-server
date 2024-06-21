@@ -8,6 +8,8 @@ serde = { workspace = true, features = ["derive"] }
 toml.workspace = true
 sea-orm.workspace = true
 sea-orm-migration.workspace = true
-tokio = {workspace = true, features = ["sync"]}
+tokio = { workspace = true, features = ["sync"] }
 rust-crypto.workspace = true
 tracing.workspace = true
+jsonwebtoken.workspace = true
+chrono.workspace = true

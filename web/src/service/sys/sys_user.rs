@@ -7,7 +7,7 @@ use common::db::get_db;
 use common::error::CtsError;
 use common::md5::generate_md5;
 use entity::sys_user::{ActiveModel, Entity as SysUser, Column as SysUserColumn};
-use models::dto::{PageResult, parse_page};
+use models::dto::{PageResult, handler_page};
 use models::dto::sys::request::sys_user::{AddUserDto, SearchUserDto, UpdateUserDto};
 use models::dto::sys::response::sys_user::ResponseUser;
 use crate::service::has_tenant;
@@ -266,7 +266,7 @@ pub async fn search(data: SearchUserDto) -> Result<PageResult<ResponseUser>, Cts
     let tx = db.begin().await?;
     // 查询数据数量
     let total = select.clone().count(&tx).await?;
-    let (page_no, page_size) = parse_page(data.page);
+    let (page_no, page_size) = handler_page(data.page);
     // 分页总数
     let paginate = select
         .into_model::<ResponseUser>()

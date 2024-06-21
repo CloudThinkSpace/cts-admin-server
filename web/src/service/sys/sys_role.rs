@@ -6,7 +6,7 @@ use uuid::Uuid;
 use common::db::get_db;
 use common::error::CtsError;
 use entity::sys_role::{ActiveModel, Column as SysRoleColumn, Entity as SysRole};
-use models::dto::{PageResult, parse_page};
+use models::dto::{PageResult, handler_page};
 use models::dto::sys::request::sys_role::{AddRoleDto, SearchRoleDto, UpdateRoleDto};
 use models::dto::sys::response::sys_role::ResponseRole;
 use crate::service::has_tenant;
@@ -164,7 +164,7 @@ pub async fn search(data: SearchRoleDto) -> Result<PageResult<ResponseRole>, Cts
     let tx = db.begin().await?;
     // 查询数据数量
     let total = select.clone().count(&tx).await?;
-    let (page_no, page_size) = parse_page(data.page);
+    let (page_no, page_size) = handler_page(data.page);
     // 分页对象
     let paginate = select
         .into_model::<ResponseRole>()

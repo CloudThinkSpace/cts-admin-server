@@ -3,6 +3,7 @@ use common::error::CtsError;
 use entity::prelude::SysTenant;
 
 pub mod sys;
+pub mod base;
 
 
 /// 判断租户是否存在
