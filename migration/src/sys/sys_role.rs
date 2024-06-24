@@ -46,12 +46,6 @@ impl SysRole {
                     .col(ColumnDef::new(SysRole::CreatedAt).timestamp().not_null())
                     .col(ColumnDef::new(SysRole::UpdatedAt).timestamp())
                     .col(ColumnDef::new(SysRole::DeletedAt).timestamp())
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_role_tenant_id")
-                    //         .from(SysRole::Table, SysRole::TenantId)
-                    //         .to(SysTenant::Table, SysTenant::Id)
-                    // )
                     .to_owned(),
             )
             .await
@@ -59,7 +53,7 @@ impl SysRole {
 
     pub async fn drop_table(manager: &SchemaManager<'_>)-> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(SysRole::Table).to_owned()).await?;
+            .drop_table(Table::drop().table(SysRole::Table).if_exists().to_owned()).await?;
         // manager
         //     .drop_foreign_key(
         //         ForeignKey::drop().table(SysRole::Table).name("fk_role_tenant_id").to_owned()).await?;

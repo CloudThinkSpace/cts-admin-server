@@ -54,6 +54,6 @@ impl SysApi {
 
     pub async fn drop_table(manager: &SchemaManager<'_>)-> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(SysApi::Table).to_owned()).await
+            .drop_table(Table::drop().table(SysApi::Table).if_exists().to_owned()).await
     }
 }

@@ -2,6 +2,7 @@ use chrono::Local;
 use sea_orm::Statement;
 use sea_orm_migration::prelude::*;
 use common::md5;
+use crate::sys::sys_role::SysRole;
 
 #[derive(DeriveIden)]
 pub enum SysUser {
@@ -28,6 +29,8 @@ pub enum SysUser {
     Avatar,
     // 租户编号
     TenantId,
+    // 角色编号
+    RoleId,
     // 创建时间
     CreatedAt,
     // 更新时间
@@ -62,16 +65,37 @@ impl SysUser {
                     .col(ColumnDef::new(SysUser::UpdatedAt).timestamp())
                     .col(ColumnDef::new(SysUser::DeletedAt).timestamp())
                     .col(ColumnDef::new(SysUser::TenantId).string())
-                    // 创建主键
-                    .index(Index::create().table(SysUser::Table).name("unique_user_username").unique())
+                    .col(ColumnDef::new(SysUser::RoleId).string().not_null())
                     .to_owned(),
             )
             .await
     }
 
+    pub async fn create_index(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+
+        // 创建唯一键
+        manager.create_index(Index::create()
+            .table(SysUser::Table)
+            .if_not_exists()
+            .name("unique_user_username")
+            .col(SysUser::Username)
+            .unique()
+            .to_owned()
+        ).await?;
+        // 创建 角色外键
+        manager.create_foreign_key(
+            ForeignKey::create()
+                .name("Fk_user_role_id")
+                .from(SysUser::Table, SysUser::RoleId)
+                .to(SysRole::Table, SysRole::Id)
+                .to_owned()
+        ).await
+
+    }
+
     pub async fn drop_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(SysUser::Table).to_owned()).await?;
+            .drop_table(Table::drop().table(SysUser::Table).if_exists().to_owned()).await?;
         Ok(())
     }
 
@@ -85,8 +109,8 @@ impl SysUser {
             manager.get_database_backend(),
             "
         INSERT INTO sys_user
-        (id, username, nickname, phone, email, password, created_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7)
+        (id, username, nickname, phone, email, password,role_id, created_at)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
         ",
             [
                 "1".into(),
@@ -95,6 +119,7 @@ impl SysUser {
                 "18911797115".into(),
                 "tanghy@cloudthink.space".into(),
                 md5::generate_md5("123456".to_string()).into(),
+                "1".into(),
                 now.into()
             ]
         );

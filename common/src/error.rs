@@ -1,44 +1,14 @@
 use sea_orm::DbErr;
-use tracing::info;
+use thiserror::Error;
 
+#[derive(Debug, Error)]
 pub enum CtsError {
-    Sql(String),
+    #[error("数据查询错误")]
+    DbErr(#[from] DbErr),
+    #[error("服务器错误：{0}")]
     Server(String),
+    #[error("请求错误：{0}")]
     Request(String),
-    DataAlreadyExists(String),
-    DataNotExists(String),
+    #[error("系统错误：{0}")]
     Custom(String),
-}
-
-impl CtsError {
-    pub fn into<T>(self) -> Result<T, CtsError> {
-        match &self {
-            CtsError::Sql(data) => {
-                info!("SqlError:{}", data);
-            }
-            CtsError::Server(data) => {
-                info!("Server:{}", data);
-            }
-            CtsError::Request(data) => {
-                info!("RequestError:{}", data);
-            }
-            CtsError::Custom(data) => {
-                info!("Custom:{}", data);
-            }
-            CtsError::DataAlreadyExists(data) => {
-                info!("DataAlreadyExists:{}", data);
-            }
-            CtsError::DataNotExists(data) => {
-                info!("DataAlreadyExists:{}", data);
-            }
-        }
-        Err(self)
-    }
-}
-
-impl From<DbErr> for CtsError {
-    fn from(value: DbErr) -> Self {
-        info!("{}", value.to_string());
-        CtsError::Sql(value.to_string())
-    }
 }

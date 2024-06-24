@@ -1,9 +1,10 @@
-use sea_orm::FromQueryResult;
 use sea_orm::prelude::DateTime;
 use serde::{Deserialize, Serialize};
 use entity::sys_user::Model;
+use crate::dto::sys::response::sys_role::ResponseRole;
+use crate::dto::sys::response::sys_tenant::ResponseTenant;
 
-#[derive(Debug, Serialize, Deserialize, FromQueryResult, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ResponseUser {
     pub id: String,
@@ -17,7 +18,8 @@ pub struct ResponseUser {
     pub avatar: Option<String>,
     pub created_at: DateTime,
     pub updated_at: Option<DateTime>,
-    pub tenant_id: Option<String>,
+    pub tenant: Option<ResponseTenant>,
+    pub role: Option<ResponseRole>,
 }
 
 impl From<Model> for ResponseUser {
@@ -34,7 +36,8 @@ impl From<Model> for ResponseUser {
             avatar: value.avatar,
             created_at: value.created_at,
             updated_at: value.updated_at,
-            tenant_id: value.tenant_id,
+            role: None,
+            tenant: None,
         }
     }
 }

@@ -58,10 +58,10 @@ impl SysMenu {
                     )
                     .col(ColumnDef::new(SysMenu::Name).string().not_null())
                     .col(ColumnDef::new(SysMenu::ParentId).string().not_null())
-                    .col(ColumnDef::new(SysMenu::Sort).big_integer())
-                    .col(ColumnDef::new(SysMenu::Path).string())
+                    .col(ColumnDef::new(SysMenu::Sort).big_integer().not_null())
+                    .col(ColumnDef::new(SysMenu::Path).string().not_null())
                     .col(ColumnDef::new(SysMenu::Hidden).integer().not_null().default(0))
-                    .col(ColumnDef::new(SysMenu::Component).string())
+                    .col(ColumnDef::new(SysMenu::Component).string().not_null())
                     .col(ColumnDef::new(SysMenu::ActiveName).string())
                     .col(ColumnDef::new(SysMenu::KeepAlive).integer().not_null().default(0))
                     .col(ColumnDef::new(SysMenu::Title).string().not_null())
@@ -81,6 +81,6 @@ impl SysMenu {
 
     pub async fn drop_table(manager: &SchemaManager<'_>)-> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(SysMenu::Table).to_owned()).await
+            .drop_table(Table::drop().table(SysMenu::Table).if_exists().to_owned()).await
     }
 }

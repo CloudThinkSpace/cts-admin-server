@@ -11,6 +11,7 @@ pub struct UpdateUserDto {
     pub remark: Option<String>,
     pub description: Option<String>,
     pub avatar: Option<String>,
+    pub role_id: Option<String>
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -31,6 +32,7 @@ pub struct AddUserDto {
     pub description: Option<String>,
     pub avatar: Option<String>,
     pub tenant_id: Option<String>,
+    pub role_id: String,
 }
 
 #[derive(Debug, Deserialize)]

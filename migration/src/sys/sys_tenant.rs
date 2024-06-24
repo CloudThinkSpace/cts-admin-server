@@ -1,5 +1,6 @@
+use chrono::Local;
+use sea_orm::Statement;
 use sea_orm_migration::prelude::*;
-
 #[derive(DeriveIden)]
 pub enum SysTenant {
     Table,
@@ -51,6 +52,29 @@ impl SysTenant {
 
     pub async fn drop_table(manager: &SchemaManager<'_>)-> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(SysTenant::Table).to_owned()).await
+            .drop_table(Table::drop().table(SysTenant::Table).if_exists().to_owned()).await
+    }
+
+    pub async fn insert(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+
+        let db = manager.get_connection();
+        // 生成时间戳
+        let now = Local::now().naive_local();
+
+        let stmt_tenant = Statement::from_sql_and_values(
+            manager.get_database_backend(),
+            "
+        INSERT INTO sys_tenant
+        (id, name, created_at)
+        VALUES ($1,$2,$3)
+        ",
+            [
+                "1".into(),
+                "test".into(),
+                now.into()
+            ]
+        );
+        db.execute(stmt_tenant).await?;
+        Ok(())
     }
 }

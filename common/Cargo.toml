@@ -13,3 +13,5 @@ rust-crypto.workspace = true
 tracing.workspace = true
 jsonwebtoken.workspace = true
 chrono.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true

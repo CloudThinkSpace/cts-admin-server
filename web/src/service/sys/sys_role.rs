@@ -1,48 +1,58 @@
+use std::collections::HashMap;
+
+use anyhow::{bail, Result};
 use chrono::Local;
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, NotSet, PaginatorTrait, QueryFilter};
 use sea_orm::ActiveValue::Set;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, NotSet, PaginatorTrait, QueryFilter, TransactionTrait};
-use tracing::info;
 use uuid::Uuid;
+
 use common::db::get_db;
-use common::error::CtsError;
 use entity::sys_role::{ActiveModel, Column as SysRoleColumn, Entity as SysRole};
-use models::dto::{PageResult, handler_page};
+use entity::sys_tenant::{Column as SysTenantColumn, Entity as SysTenant};
+use models::dto::{handler_page, PageResult};
 use models::dto::sys::request::sys_role::{AddRoleDto, SearchRoleDto, UpdateRoleDto};
 use models::dto::sys::response::sys_role::ResponseRole;
+use models::dto::sys::response::sys_tenant::ResponseTenant;
+
 use crate::service::has_tenant;
 use crate::service::sys::ADMIN_ID;
 
 /// 根据角色编号查询角色数据
 /// @param id 角色编号
-pub async fn get_by_id(id: String) -> Result<Option<ResponseRole>, CtsError> {
+pub async fn get_by_id(id: String) -> Result<Option<ResponseRole>> {
     let db = get_db().await;
-    let result = SysRole::find_by_id(id)
+    let result = SysRole::find_by_id(id.clone())
         // 保障删除字段为空
         .filter(SysRoleColumn::DeletedAt.is_null())
-        .into_model::<ResponseRole>()
-        .one(&db).await;
+        .one(&db).await?;
     match result {
-        Ok(data) => {
-            Ok(data)
+        None => {
+            bail!("编号：{}，数据不存在",id)
         }
-        Err(err) => {
-            CtsError::Sql(err.to_string()).into()
+        Some(data) => {
+            let mut role: ResponseRole = data.clone().into();
+            // 查询租户数据
+            let tenant = SysTenant::find_by_id(data.tenant_id.unwrap())
+                .one(&db).await?;
+            if tenant.is_some() {
+                let tenant = tenant.unwrap();
+                role.tenant = Some(tenant.into());
+            }
+            Ok(Some(role))
         }
     }
 }
 
 /// 根据角色编号删除角色数据
 /// @param id 角色编号
-pub async fn delete_by_id(id: String, force: bool) -> Result<String, CtsError> {
+pub async fn delete_by_id(id: String, force: bool) -> Result<String> {
     let db = get_db().await;
     // 查询角色信息
-    let result = SysRole::find_by_id(id.clone())
-        .one(&db).await?;
+    let result = SysRole::find_by_id(id.clone()).one(&db).await?;
     if let Some(data) = result {
         // 查看角色是否为超级管理员
         if ADMIN_ID == data.id {
-            info!("超级管理员角色无法删除");
-            return CtsError::Custom("超级管理员角色无法删除".to_string()).into();
+            bail!("超级管理员角色无法删除".to_string())
         } else {
             // 判断是否强制删除，如果是删除数据，如果不是更新删除字段
             match force {
@@ -63,18 +73,17 @@ pub async fn delete_by_id(id: String, force: bool) -> Result<String, CtsError> {
             }
         }
     } else {
-        info!("该角色不存在");
-        CtsError::DataNotExists("该角色不存在".to_string()).into()
+        bail!("该角色不存在".to_string())
     }
 }
 
 /// 添加角色
 /// @param 角色对象
-pub async fn add(data: AddRoleDto) -> Result<String, CtsError> {
+pub async fn add(data: AddRoleDto) -> Result<String> {
     let db = get_db().await;
     // 判断角色名是否为空
     if data.name.is_empty() {
-        return CtsError::Request("名称不能为空".to_string()).into();
+        bail!("名称不能为空".to_string())
     }
     // 判断租户是否存在
     has_tenant(&data.tenant_id, &db).await?;
@@ -95,19 +104,16 @@ pub async fn add(data: AddRoleDto) -> Result<String, CtsError> {
     Ok(add_role.id)
 }
 
-
 /// 更新角色信息
 /// @param update_role 待更新的角色对象
-pub async fn update(id: String, update_role: UpdateRoleDto) -> Result<String, CtsError> {
+pub async fn update(id: String, update_role: UpdateRoleDto) -> Result<String> {
     let db = get_db().await;
     // 判断id是否存在
     if id.is_empty() {
-        info!("角色编号不能为空");
-        return Err(CtsError::DataNotExists("角色编号不能为空".to_string()));
+        bail!("角色编号不能为空".to_string())
     }
     if ADMIN_ID == id {
-        info!("超级管理员角色无法更新");
-        return Err(CtsError::Custom("超级管理员角色无法更新".to_string()));
+        bail!("超级管理员角色无法更新".to_string())
     }
     // 查询角色信息
     let result = SysRole::find_by_id(id.clone()).one(&db).await?;
@@ -132,14 +138,13 @@ pub async fn update(id: String, update_role: UpdateRoleDto) -> Result<String, Ct
         let update_data = current.update(&db).await?;
         Ok(update_data.id)
     } else {
-        info!("角色数据不存在，无法更新");
-        Err(CtsError::Custom("角色数据不存在，无法更新".to_string()))
+        bail!("角色数据不存在，无法更新".to_string())
     }
 }
 
 /// 查询角色列表
 /// @param data 类型SearchRoleDto
-pub async fn search(data: SearchRoleDto) -> Result<PageResult<ResponseRole>, CtsError> {
+pub async fn search(data: SearchRoleDto) -> Result<PageResult<ResponseRole>> {
     let db = get_db().await;
     let mut select = SysRole::find();
     // 判断名称是否为空
@@ -160,20 +165,35 @@ pub async fn search(data: SearchRoleDto) -> Result<PageResult<ResponseRole>, Cts
     }
     // 排除已删除角色
     select = select.filter(SysRoleColumn::DeletedAt.is_null());
-    // 获取事务对象
-    let tx = db.begin().await?;
     // 查询数据数量
-    let total = select.clone().count(&tx).await?;
+    let total = select.clone().count(&db).await?;
     let (page_no, page_size) = handler_page(data.page);
     // 分页对象
     let paginate = select
-        .into_model::<ResponseRole>()
         .paginate(&db, page_size);
     // 页数
     let pages = paginate.num_pages().await?;
 
     // 查询角色数据
     let list = paginate.fetch_page(page_no - 1).await?;
-    let result = PageResult::new(list, total, pages, page_no);
+
+    let tenant_ids: Vec<String> = list.iter().filter(|item| item.tenant_id.is_some()).map(|item| item.tenant_id.clone().unwrap()).collect();
+
+    let tenants = SysTenant::find()
+        .filter(SysTenantColumn::Id.is_in(tenant_ids))
+        .all(&db).await?.iter().map(|item| (item.id.clone(), item.clone().into())).collect::<HashMap<String,ResponseTenant>>();
+
+    let mut result = Vec::new();
+    // 重组数据
+    for role in list.into_iter() {
+        let mut response_role: ResponseRole = role.into();
+        let tenant = tenants.get(&response_role.id);
+        if tenant.is_some() {
+            response_role.tenant = Some(tenant.unwrap().clone())
+        }
+
+        result.push(response_role)
+    }
+    let result = PageResult::new(result, total, pages, page_no);
     Ok(result)
 }

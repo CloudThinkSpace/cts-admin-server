@@ -2,9 +2,8 @@ use std::collections::HashMap;
 use axum::extract::{Path, Query};
 use axum::Json;
 use axum::response::IntoResponse;
-use response_utils::res::ResResult;
 use models::dto::sys::request::sys_role::{AddRoleDto, SearchRoleDto, UpdateRoleDto};
-use crate::handler::handler_force;
+use crate::handler::{handle_force, handle_result};
 use crate::service::sys::sys_role;
 
 /// 添加角色函数
@@ -12,14 +11,7 @@ use crate::service::sys::sys_role;
 /// return IntoResponse
 pub async fn add(Json(data): Json<AddRoleDto>) -> impl IntoResponse {
     let result = sys_role::add(data).await;
-    match result {
-        Ok(data) => {
-            ResResult::with_success(data)
-        }
-        Err(_err) => {
-            ResResult::<()>::with_error("添加角色失败")
-        }
-    }
+    handle_result(result)
 }
 
 /// 更新角色函数
@@ -28,14 +20,7 @@ pub async fn add(Json(data): Json<AddRoleDto>) -> impl IntoResponse {
 /// return IntoResponse
 pub async fn update(Path(id): Path<String>, Json(data): Json<UpdateRoleDto>) -> impl IntoResponse {
     let result = sys_role::update(id, data).await;
-    match result {
-        Ok(data) => {
-            ResResult::with_success(data)
-        }
-        Err(_err) => {
-            ResResult::<()>::with_error("更新角色失败")
-        }
-    }
+    handle_result(result)
 }
 
 
@@ -46,16 +31,9 @@ pub async fn update(Path(id): Path<String>, Json(data): Json<UpdateRoleDto>) -> 
 pub async fn delete(Path(id): Path<String>, Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
 
     // 判断是否真删除
-    let force= handler_force(params);
+    let force= handle_force(params);
     let result = sys_role::delete_by_id(id, force).await;
-    match result {
-        Ok(data) => {
-            ResResult::with_success(data)
-        }
-        Err(_err) => {
-            ResResult::<()>::with_error("删除角色失败")
-        }
-    }
+    handle_result(result)
 }
 
 /// 查询角色详情函数
@@ -63,14 +41,7 @@ pub async fn delete(Path(id): Path<String>, Query(params): Query<HashMap<String,
 /// return IntoResponse
 pub async fn query(Path(id): Path<String>) -> impl IntoResponse {
     let result = sys_role::get_by_id(id).await;
-    match result {
-        Ok(data) => {
-            ResResult::with_success(data)
-        }
-        Err(_err) => {
-            ResResult::<()>::with_error("查询角色失败")
-        }
-    }
+    handle_result(result)
 }
 
 /// 分页查询角色函数
@@ -78,12 +49,5 @@ pub async fn query(Path(id): Path<String>) -> impl IntoResponse {
 /// return IntoResponse
 pub async fn search(Json(data): Json<SearchRoleDto>) -> impl IntoResponse {
     let result = sys_role::search(data).await;
-    match result {
-        Ok(data) => {
-            ResResult::with_success(data)
-        }
-        Err(_err) => {
-            ResResult::<()>::with_error("查询角色失败")
-        }
-    }
+    handle_result(result)
 }

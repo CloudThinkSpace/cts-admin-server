@@ -1,0 +1,718 @@
+{
+  "form": {
+    "name": "sample_nx_from",
+    "title": "宁夏采集现场记录表",
+    "description": "宁夏采集现场记录表",
+    "version": "1.0",
+    "questions": [
+      {
+        "type": "SectionType",
+        "name": "name00",
+        "title": "一、工作信息"
+      },
+      {
+        "type": "TextType",
+        "name": "name01",
+        "title": "采样小组名称或者编号",
+        "unit": "",
+        "cached": true,
+        "required": true,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "TextType",
+        "name": "name02",
+        "title": "组长",
+        "unit": "",
+        "cached": true,
+        "required": true,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "TextType",
+        "name": "name03",
+        "title": "组员",
+        "unit": "",
+        "cached": true,
+        "required": true,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "SectionType",
+        "name": "name20",
+        "title": "二、样点信息"
+      },
+      {
+        "type": "TextType",
+        "name": "name21",
+        "title": "市",
+        "unit": "",
+        "required": true,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "TextType",
+        "name": "name22",
+        "title": "县（区）",
+        "unit": "",
+        "required": true,
+        "description": "",
+        "error": "",
+        "defaultValue": "隆子县"
+      },
+      {
+        "type": "TextType",
+        "name": "name23",
+        "title": "乡（镇）",
+        "unit": "",
+        "required": true,
+        "description": "",
+        "error": "",
+        "defaultValue": "日当镇"
+      },
+      {
+        "type": "TextType",
+        "name": "name24",
+        "title": "村",
+        "unit": "",
+        "required": true,
+        "description": "",
+        "error": "",
+        "defaultValue": "日当村"
+      },
+      {
+        "type": "TextType",
+        "name": "name25",
+        "title": "样点编号",
+        "unit": "",
+        "required": true,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "NumberType",
+        "name": "name26",
+        "title": "现场坐标-东经",
+        "unit": "",
+        "required": true,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "NumberType",
+        "name": "name27",
+        "title": "现场坐标-北纬",
+        "unit": "",
+        "required": true,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "NumberType",
+        "name": "name28",
+        "title": "现场海拔",
+        "unit": "",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "SingleChoiceType",
+        "name": "name29",
+        "title": "土地类型",
+        "unit": "",
+        "required": true,
+        "description": "",
+        "error": "",
+        "defaultValue": "",
+        "items": [
+          {
+            "name": "水田",
+            "code": "水田"
+          },
+          {
+            "name": "旱地",
+            "code": "旱地"
+          },
+          {
+            "name": "水浇地",
+            "code": "水浇地"
+          },
+          {
+            "name": "园地",
+            "code": "园地"
+          },
+          {
+            "name": "林地",
+            "code": "林地"
+          },
+          {
+            "name": "草地",
+            "code": "草地"
+          }
+        ]
+      },
+      {
+        "type": "SingleChoiceType",
+        "name": "name30",
+        "title": "正东",
+        "unit": "",
+        "required": true,
+        "description": "",
+        "error": "",
+        "defaultValue": "",
+        "items": [
+          {
+            "name": "居民点",
+            "code": "居民点"
+          },
+          {
+            "name": "厂矿",
+            "code": "厂矿"
+          },
+          {
+            "name": "耕地",
+            "code": "耕地"
+          },
+          {
+            "name": "林地",
+            "code": "林地"
+          },
+          {
+            "name": "草地",
+            "code": "草地"
+          },
+          {
+            "name": "水域",
+            "code": "水域"
+          },
+          {
+            "name": "其他",
+            "code": "其他"
+          }
+        ]
+      },
+      {
+        "type": "SingleChoiceType",
+        "name": "name31",
+        "title": "正南",
+        "unit": "",
+        "required": true,
+        "description": "",
+        "error": "",
+        "defaultValue": "",
+        "items": [
+          {
+            "name": "居民点",
+            "code": "居民点"
+          },
+          {
+            "name": "厂矿",
+            "code": "厂矿"
+          },
+          {
+            "name": "耕地",
+            "code": "耕地"
+          },
+          {
+            "name": "林地",
+            "code": "林地"
+          },
+          {
+            "name": "草地",
+            "code": "草地"
+          },
+          {
+            "name": "水域",
+            "code": "水域"
+          },
+          {
+            "name": "其他",
+            "code": "其他"
+          }
+        ]
+      },
+      {
+        "type": "SingleChoiceType",
+        "name": "name32",
+        "title": "正西",
+        "unit": "",
+        "required": true,
+        "description": "",
+        "error": "",
+        "defaultValue": "",
+        "items": [
+          {
+            "name": "居民点",
+            "code": "居民点"
+          },
+          {
+            "name": "厂矿",
+            "code": "厂矿"
+          },
+          {
+            "name": "耕地",
+            "code": "耕地"
+          },
+          {
+            "name": "林地",
+            "code": "林地"
+          },
+          {
+            "name": "草地",
+            "code": "草地"
+          },
+          {
+            "name": "水域",
+            "code": "水域"
+          },
+          {
+            "name": "其他",
+            "code": "其他"
+          }
+        ]
+      },
+      {
+        "type": "SingleChoiceType",
+        "name": "name33",
+        "title": "正北",
+        "unit": "",
+        "required": true,
+        "description": "",
+        "error": "",
+        "defaultValue": "",
+        "items": [
+          {
+            "name": "居民点",
+            "code": "居民点"
+          },
+          {
+            "name": "厂矿",
+            "code": "厂矿"
+          },
+          {
+            "name": "耕地",
+            "code": "耕地"
+          },
+          {
+            "name": "林地",
+            "code": "林地"
+          },
+          {
+            "name": "草地",
+            "code": "草地"
+          },
+          {
+            "name": "水域",
+            "code": "水域"
+          },
+          {
+            "name": "其他",
+            "code": "其他"
+          }
+        ]
+      },
+      {
+        "type": "TextType",
+        "name": "name34",
+        "title": "其他",
+        "unit": "",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "SingleChoiceType",
+        "name": "name35",
+        "title": "水源情况",
+        "unit": "",
+        "required": true,
+        "description": "",
+        "error": "",
+        "defaultValue": "",
+        "items": [
+          {
+            "name": "降水",
+            "code": "降水"
+          },
+          {
+            "name": "河流",
+            "code": "河流"
+          },
+          {
+            "name": "湖泊",
+            "code": "湖泊"
+          },
+          {
+            "name": "地下水",
+            "code": "地下水"
+          },
+          {
+            "name": "水库",
+            "code": "水库"
+          },
+          {
+            "name": "其他",
+            "code": "其他"
+          }
+        ]
+      },
+      {
+        "type": "SingleChoiceType",
+        "name": "name36",
+        "title": "当季灾害",
+        "unit": "",
+        "required": true,
+        "description": "",
+        "error": "",
+        "defaultValue": "无",
+        "items": [
+          {
+            "name": "干旱",
+            "code": "干旱"
+          },
+          {
+            "name": "洪涝",
+            "code": "洪涝"
+          },
+          {
+            "name": "病害",
+            "code": "病害"
+          },
+          {
+            "name": "虫害",
+            "code": "虫害"
+          },
+          {
+            "name": "无",
+            "code": "无"
+          }
+        ]
+      },
+      {
+        "type": "SectionType",
+        "name": "name40",
+        "title": "三、样品信息"
+      },
+      {
+        "type": "LongitudeType",
+        "name": "name41",
+        "title": "样点坐标-东经",
+        "unit": "",
+        "enabled": false,
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "LatitudeType",
+        "name": "name42",
+        "title": "样点坐标-北纬",
+        "unit": "",
+        "enabled": false,
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "NumberType",
+        "name": "name43",
+        "title": "样点海拔",
+        "unit": "",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "TextType",
+        "name": "name44",
+        "title": "土壤样品编号",
+        "unit": "",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "NumberType",
+        "name": "name45",
+        "title": "土壤样品重量",
+        "unit": "克",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "TextType",
+        "name": "name46",
+        "title": "农产品样品编码",
+        "unit": "",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "NumberType",
+        "name": "name47",
+        "title": "农产品样品重量",
+        "unit": "克",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "TextType",
+        "name": "name48",
+        "cached": true,
+        "title": "农产品类型",
+        "unit": "",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "TextType",
+        "name": "name49",
+        "cached": true,
+        "title": "农产品品种",
+        "unit": "",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "NumberType",
+        "name": "name50",
+        "title": "氮肥",
+        "unit": "千克/年/亩",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "NumberType",
+        "name": "name51",
+        "title": "磷肥",
+        "unit": "千克/年/亩",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "NumberType",
+        "name": "name52",
+        "title": "钾肥",
+        "unit": "千克/年/亩",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "NumberType",
+        "name": "name53",
+        "title": "有机肥",
+        "unit": "千克/年/亩",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "NumberType",
+        "name": "name54",
+        "title": "复合肥",
+        "unit": "千克/年/亩",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "TextType",
+        "name": "name55",
+        "title": "杀菌剂品名1",
+        "unit": "",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "NumberType",
+        "name": "name56",
+        "title": "杀菌剂用量1",
+        "unit": "克/年/亩",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "TextType",
+        "name": "name57",
+        "title": "杀菌剂品名2",
+        "unit": "",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "NumberType",
+        "name": "name58",
+        "title": "杀菌剂用量2",
+        "unit": "克/年/亩",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "TextType",
+        "name": "name59",
+        "title": "杀虫剂品名1",
+        "unit": "",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "NumberType",
+        "name": "name60",
+        "title": "杀虫剂用量1",
+        "unit": "克/年/亩",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "TextType",
+        "name": "name61",
+        "title": "杀虫剂品名2",
+        "unit": "",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "NumberType",
+        "name": "name62",
+        "title": "杀虫剂用量2",
+        "unit": "克/年/亩",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "TextType",
+        "name": "name63",
+        "title": "除草剂品名1",
+        "unit": "",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "NumberType",
+        "name": "name64",
+        "title": "除草剂用量1",
+        "unit": "克/年/亩",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "TextType",
+        "name": "name65",
+        "title": "除草剂品名2",
+        "unit": "",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "NumberType",
+        "name": "name66",
+        "title": "除草剂用量2",
+        "unit": "克/年/亩",
+        "required": false,
+        "description": "",
+        "error": "",
+        "defaultValue": ""
+      },
+      {
+        "type": "ImageType",
+        "name": "name67",
+        "title": "采集照片",
+        "lineMaxNum": 4,
+        "subTitles": [
+          "土壤照片",
+          "农产品照片"
+        ]
+      }
+    ],
+    "validations": {
+      "expressionValidations": [
+        {
+          "expression": "-180<name26 && name26 <180",
+          "message": "现场坐标经度范围应该在【-180，180】之间。"
+        },
+        {
+          "expression": "-90<name27 && name27 <90",
+          "message": "现场坐标纬度范围应该在【-90，90】之间。"
+        },
+        {
+          "expression": "-180<name41 && name41 <180",
+          "message": "样点坐标经度范围应该在【-180，180】之间。"
+        },
+        {
+          "expression": "-90<name42 && name42 <90",
+          "message": "样点坐标纬度范围应该在【-90，90】之间。"
+        }
+      ]
+    },
+    "auto": {
+      "name21": "市",
+      "name22": "区县",
+      "name23": "乡镇",
+      "name24": "村",
+      "name25": "code",
+      "name26": "lon",
+      "name27": "lat",
+      "name29": "地类",
+      "name44": "土壤编号",
+      "name46": "农产品编号"
+    }
+  }
+}

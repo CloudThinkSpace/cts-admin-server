@@ -20,9 +20,25 @@ pub struct Model {
     pub updated_at: Option<DateTime>,
     pub deleted_at: Option<DateTime>,
     pub tenant_id: Option<String>,
+    pub role_id: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::sys_role::Entity",
+        from = "Column::RoleId",
+        to = "super::sys_role::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    SysRole,
+}
+
+impl Related<super::sys_role::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::SysRole.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}

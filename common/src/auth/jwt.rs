@@ -1,6 +1,7 @@
 use jsonwebtoken::{decode, DecodingKey, encode, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
+use anyhow::Result;
 
 const SECRET: &str = "CloudThinkSpace";
 
@@ -22,7 +23,7 @@ impl<T> Claims<T>
     }
 }
 
-pub fn encode_token<T>(user: T, exp: u64) -> Result<String, String>
+pub fn encode_token<T>(user: T, exp: u64) -> Result<String>
     where T: Serialize
 {
     let token = encode(
@@ -32,13 +33,11 @@ pub fn encode_token<T>(user: T, exp: u64) -> Result<String, String>
             exp
         },
         &EncodingKey::from_secret(SECRET.as_bytes()),
-    ).map_err(|err| {
-        err.to_string()
-    })?;
+    )?;
     Ok(token)
 }
 
-pub fn decode_token<T>(token: &str) -> Result<Claims<T>, String>
+pub fn decode_token<T>(token: &str) -> Result<Claims<T>>
     where T: DeserializeOwned
 {
     let mut  validation = Validation::default();
@@ -48,7 +47,7 @@ pub fn decode_token<T>(token: &str) -> Result<Claims<T>, String>
         token,
         &DecodingKey::from_secret(SECRET.as_bytes()),
         &validation,
-    ).map_err(|err| err.to_string())?;
+    )?;
 
     Ok(token_data.claims)
 }

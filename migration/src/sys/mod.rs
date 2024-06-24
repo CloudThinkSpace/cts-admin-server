@@ -21,6 +21,11 @@ pub async fn create_tables(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
     Ok(())
 }
 
+pub async fn create_indices(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+    SysUser::create_index(manager).await?;
+    Ok(())
+}
+
 pub async fn drop_tables(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
     SysUser::drop_table(manager).await?;
     SysRole::drop_table(manager).await?;
@@ -31,7 +36,8 @@ pub async fn drop_tables(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
 }
 
 pub async fn insert_data(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-    SysUser::insert(manager).await?;
     SysRole::insert(manager).await?;
+    SysUser::insert(manager).await?;
+    SysTenant::insert(manager).await?;
     Ok(())
 }
