@@ -1483,6 +1483,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c8640c5d730cb13ebd907d8d04b52f55ac9a2eec55b440c8892f40d56c76c1d"
 
 [[package]]
+name = "middleware"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "common",
+ "models",
+]
+
+[[package]]
 name = "migration"
 version = "0.1.0"
 dependencies = [
@@ -3525,6 +3534,7 @@ dependencies = [
  "common",
  "entity",
  "log",
+ "middleware",
  "models",
  "response_utils",
  "sea-orm 0.12.15",

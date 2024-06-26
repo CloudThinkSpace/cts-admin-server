@@ -10,6 +10,8 @@ use crate::route::sys::sys_menu::menu_route;
 use crate::route::sys::sys_permission::permission_route;
 use crate::route::sys::sys_role::role_route;
 use crate::route::sys::sys_user::user_route;
+use middleware::layers as my_layers;
+use axum::middleware as axum_middleware;
 
 pub mod sys;
 pub mod base;
@@ -46,6 +48,7 @@ fn auth_api() -> Router {
 
     Router::new()
         .nest("/sys", router)
+        .route_layer(axum_middleware::from_fn(my_layers::auth_layer::auth))
 }
 
 /// 无需认证api

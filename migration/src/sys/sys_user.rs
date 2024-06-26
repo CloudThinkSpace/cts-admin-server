@@ -3,6 +3,7 @@ use sea_orm::Statement;
 use sea_orm_migration::prelude::*;
 use common::md5;
 use crate::sys::sys_role::SysRole;
+use crate::sys::TableOperation;
 
 #[derive(DeriveIden)]
 pub enum SysUser {
@@ -39,8 +40,8 @@ pub enum SysUser {
     DeletedAt,
 }
 
-impl SysUser {
-    pub async fn create_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+impl TableOperation for SysUser {
+    async fn create_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .create_table(
                 Table::create()
@@ -71,7 +72,7 @@ impl SysUser {
             .await
     }
 
-    pub async fn create_index(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+    async fn create_index(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
 
         // 创建唯一键
         manager.create_index(Index::create()
@@ -93,13 +94,13 @@ impl SysUser {
 
     }
 
-    pub async fn drop_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+    async fn drop_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .drop_table(Table::drop().table(SysUser::Table).if_exists().to_owned()).await?;
         Ok(())
     }
 
-    pub async fn insert(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+    async fn insert_data(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
 
         let db = manager.get_connection();
         // 生成时间戳

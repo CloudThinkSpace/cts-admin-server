@@ -26,7 +26,7 @@ pub async fn login(username: String, password: String) -> Result<ResponseToken> 
             true => {
                 // 生成token对象
                 let user: ResponseUser = data.into();
-                let  exp = (Utc::now() + Duration::seconds(5)).timestamp() as u64;
+                let  exp = (Utc::now() + Duration::seconds(3600)).timestamp() as u64;
                 let token = encode_token(user.clone(), exp)?;
 
                 let token = ResponseToken::new(user,Token::new(token, exp));

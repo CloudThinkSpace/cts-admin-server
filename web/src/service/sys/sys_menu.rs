@@ -1,17 +1,19 @@
+use anyhow::{bail, Result};
 use chrono::Local;
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, JoinType, NotSet, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, RelationTrait, TransactionTrait};
 use sea_orm::ActiveValue::Set;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, NotSet, PaginatorTrait, QueryFilter, QueryOrder, TransactionTrait};
+use sea_orm::sea_query::{Expr, IntoCondition};
 use uuid::Uuid;
+
 use common::db::get_db;
 use common::error::CtsError;
-use entity::prelude::SysRole;
 use entity::sys_menu::{ActiveModel, Column as SysMenuColumn, Entity as SysMenu};
-use models::dto::{PageResult, handler_page};
+use entity::sys_role_menu::{Column as SysRoleMenu, Relation as SysRoleMenuRelation};
+use models::dto::{handler_page, PageResult};
 use models::dto::sys::request::sys_menu::{AddMenuDto, SearchMenuDto, UpdateMenuDto};
-use models::dto::sys::request::sys_role::SearchRoleDto;
 use models::dto::sys::response::sys_menu::ResponseMenu;
-use crate::service::sys::{SYSTEM_MENU};
-use anyhow::{bail, Result};
+
+use crate::service::sys::SYSTEM_MENU;
 
 /// 根据菜单编号查询数据
 /// @param id 菜单编号
@@ -20,9 +22,15 @@ pub async fn get_by_id(id: String) -> Result<Option<ResponseMenu>> {
     let result = SysMenu::find_by_id(id)
         // 保障删除字段为空
         .filter(SysMenuColumn::DeletedAt.is_null())
-        .into_model::<ResponseMenu>()
         .one(&db).await?;
-    Ok(result)
+    match result {
+        None => {
+            bail!("菜单不存在")
+        }
+        Some(data) => {
+            Ok(Some(data.into()))
+        }
+    }
 }
 
 /// 根据菜单编号删除数据
@@ -242,7 +250,7 @@ pub async fn search(data: SearchMenuDto) -> Result<PageResult<ResponseMenu>> {
     }
     // hidden
     if data.hidden.is_some() {
-        select =select.filter(SysMenuColumn::Hidden.eq(data.hidden.unwrap()));
+        select = select.filter(SysMenuColumn::Hidden.eq(data.hidden.unwrap()));
     }
     // component
     if data.component.is_some() {
@@ -276,19 +284,36 @@ pub async fn search(data: SearchMenuDto) -> Result<PageResult<ResponseMenu>> {
     let (page_no, page_size) = handler_page(data.page);
     // 分页对象
     let paginate = select
-        .into_model::<ResponseMenu>()
         .paginate(&db, page_size);
     // 页数
     let pages = paginate.num_pages().await?;
 
     // 查询角色数据
-    let list = paginate.fetch_page(page_no - 1).await?;
+    let list = paginate.fetch_page(page_no - 1).await?.into_iter().map(|data| data.into()).collect();
+
     let result = PageResult::new(list, total, pages, page_no);
 
     Ok(result)
 }
 
-pub async fn role_menu_tree() -> Result<ResponseMenu> {
+pub async fn role_menu_tree(role_id:String) -> Result<Vec<ResponseMenu>> {
     let db = get_db().await;
+    let result = SysMenu::find()
+        .join(JoinType::LeftJoin,
+              SysRoleMenuRelation::SysMenu
+                  .def().rev()
+                  .on_condition( move |_left, right| {
+                      Expr::col((right, SysRoleMenu::RoleId))
+                          .eq(role_id.clone())
+                          .into_condition()
+                  }),
+        )
+        .order_by_asc(SysMenuColumn::Sort)
+        .all(&db).await?
+        .into_iter()
+        .map(|model| model.into())
+        .collect();
+
+    Ok(result)
 }
 

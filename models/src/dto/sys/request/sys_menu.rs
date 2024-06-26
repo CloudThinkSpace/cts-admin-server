@@ -25,7 +25,6 @@ pub struct UpdateMenuDto {
 #[derive(Debug, Serialize, Deserialize, FromQueryResult)]
 #[serde(rename_all = "camelCase")]
 pub struct AddMenuDto {
-    pub id: String,
     pub name: String,
     pub parent_id: String,
     pub sort: i64,

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["common", "models", "utils", "web", "migration", "entity"]
+members = ["common", "models", "utils", "web", "migration", "entity", "middleware"]
 
 [workspace.package]
 authors = ["tanghy <tanghy@cloudthink.space>"]
@@ -20,6 +20,7 @@ utils = { path = "./utils", version = "0.1.0" }
 migration = { path = "./migration", version = "0.1.0" }
 entity = { path = "./entity", version = "0.1.0" }
 web = { path = "./web", version = "0.1.0" }
+middleware = {path ="./middleware", version = "0.1.0"}
 
 # 外部依赖
 # web框架

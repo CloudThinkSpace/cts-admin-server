@@ -5,7 +5,7 @@ use anyhow::Result;
 
 const SECRET: &str = "CloudThinkSpace";
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Claims<T>
 {
     pub user: T,

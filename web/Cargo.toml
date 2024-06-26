@@ -9,6 +9,7 @@ entity.workspace = true
 common.workspace = true
 models.workspace = true
 axum.workspace = true
+middleware.workspace  =true
 tokio = { workspace = true, features = ["full"] }
 tower.workspace = true
 tracing.workspace = true
