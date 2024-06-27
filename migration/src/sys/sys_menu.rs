@@ -1,3 +1,5 @@
+use chrono::Local;
+use sea_orm::Statement;
 use sea_orm_migration::prelude::*;
 use crate::sys::TableOperation;
 
@@ -84,12 +86,90 @@ impl TableOperation for SysMenu {
         Ok(())
     }
 
-    async fn drop_table(manager: &SchemaManager<'_>)-> Result<(), DbErr> {
+    async fn drop_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .drop_table(Table::drop().table(SysMenu::Table).if_exists().to_owned()).await
     }
 
-    async fn insert_data(_manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+    async fn insert_data(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        let db = manager.get_connection();
+
+        let data = create_data();
+
+        for item in data.into_iter() {
+            let stmt_user = Statement::from_sql_and_values(
+                manager.get_database_backend(),
+                "
+        INSERT INTO sys_menu
+        (id, name, parent_id, sort, path,Component, Title, Default_Menu,Created_At)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+        ",
+                item,
+            );
+            db.execute(stmt_user).await?;
+        }
+
+
         Ok(())
     }
+}
+
+fn create_data() -> Vec<[Value; 9]> {
+    let mut result = Vec::new();
+    // 生成时间戳
+    let now = Local::now().naive_local();
+    // 用户菜单数据
+    let data_user: [Value; 9] = [
+        "1".into(),
+        "用户管理".into(),
+        "1".into(),
+        1.into(),
+        "user/manager".into(),
+        "view/user.vue".into(),
+        "用户管理".into(),
+        1.into(),
+        now.into()
+    ];
+    // 角色菜单数据
+    let data_role: [Value; 9] = [
+        "2".into(),
+        "角色管理".into(),
+        "1".into(),
+        2.into(),
+        "role/manager".into(),
+        "view/role.vue".into(),
+        "角色管理".into(),
+        1.into(),
+        now.into()
+    ];
+    // 菜单数据
+    let data_menu: [Value; 9] = [
+        "3".into(),
+        "菜单管理".into(),
+        "1".into(),
+        3.into(),
+        "menu/manager".into(),
+        "view/menu.vue".into(),
+        "菜单管理".into(),
+        1.into(),
+        now.into()
+    ];
+    // Api数据
+    let data_api: [Value; 9] = [
+        "4".into(),
+        "Api管理".into(),
+        "1".into(),
+        4.into(),
+        "menu/manager".into(),
+        "view/menu.vue".into(),
+        "Api管理".into(),
+        1.into(),
+        now.into()
+    ];
+    result.push(data_user);
+    result.push(data_role);
+    result.push(data_menu);
+    result.push(data_api);
+
+    result
 }

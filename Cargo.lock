@@ -1500,6 +1500,7 @@ dependencies = [
  "common",
  "sea-orm 0.12.15",
  "sea-orm-migration 0.12.15",
+ "uuid",
 ]
 
 [[package]]

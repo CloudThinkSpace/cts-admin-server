@@ -50,6 +50,7 @@ pub async fn drop_tables(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
 pub async fn insert_data(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
     SysRole::insert_data(manager).await?;
     SysUser::insert_data(manager).await?;
+    SysMenu::insert_data(manager).await?;
     SysTenant::insert_data(manager).await?;
     SysRoleMenu::insert_data(manager).await?;
     Ok(())

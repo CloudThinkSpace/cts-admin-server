@@ -1,7 +1,7 @@
-use sea_orm::DbErr;
+use sea_orm::{ConnectionTrait, DbErr, Statement};
 use sea_orm_migration::SchemaManager;
 
-use crate::{ColumnDef, DeriveIden, ForeignKey, Table};
+use crate::{ColumnDef, DeriveIden, ForeignKey, Table, Value};
 use crate::sys::sys_menu::SysMenu;
 use crate::sys::sys_role::SysRole;
 use crate::sys::TableOperation;
@@ -64,7 +64,59 @@ impl TableOperation for SysRoleMenu {
         Ok(())
     }
 
-    async fn insert_data(_manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+    async fn insert_data(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+
+        let db = manager.get_connection();
+
+        let data = create_data();
+
+        for item in data.into_iter() {
+            let stmt_user = Statement::from_sql_and_values(
+                manager.get_database_backend(),
+                "
+        INSERT INTO sys_role_menu
+        (id, role_id, menu_id)
+        VALUES ($1,$2,$3)
+        ",
+                item,
+            );
+            db.execute(stmt_user).await?;
+        }
+
         Ok(())
     }
+}
+
+fn create_data() -> Vec<[Value; 3]> {
+    let mut result = Vec::new();
+    // 用户菜单数据
+    let data_user: [Value; 3] = [
+        uuid::Uuid::new_v4().to_string().into(),
+        "1".into(),
+        "1".into(),
+    ];
+    // 角色菜单数据
+    let data_role: [Value; 3] = [
+        uuid::Uuid::new_v4().to_string().into(),
+        "1".into(),
+        "2".into(),
+    ];
+    // 菜单数据
+    let data_menu: [Value; 3] = [
+        uuid::Uuid::new_v4().to_string().into(),
+        "1".into(),
+        "3".into(),
+    ];
+    // Api数据
+    let data_api: [Value; 3] = [
+        uuid::Uuid::new_v4().to_string().into(),
+        "1".into(),
+        "4".into(),
+    ];
+    result.push(data_user);
+    result.push(data_role);
+    result.push(data_menu);
+    result.push(data_api);
+
+    result
 }
