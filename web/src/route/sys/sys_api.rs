@@ -8,9 +8,9 @@ use crate::handler::sys::sys_api;
 pub fn api_route() -> Router {
     let router = Router::new()
         .route("/add", post(sys_api::add))
-        .route("/update", post(sys_api::update))
-        .route("/delete", get(sys_api::delete))
-        .route("/query", get(sys_api::query))
+        .route("/update/:id", post(sys_api::update))
+        .route("/delete/:id", get(sys_api::delete))
+        .route("/query/:id", get(sys_api::query))
         .route("/search", post(sys_api::search));
 
     Router::new()
