@@ -113,10 +113,33 @@ fn create_data() -> Vec<[Value; 3]> {
         "1".into(),
         "4".into(),
     ];
+    // 租户数据
+    let data_tenant: [Value; 3] = [
+        uuid::Uuid::new_v4().to_string().into(),
+        "1".into(),
+        "5".into(),
+    ];
+
+    // 采集数据
+    let data_collect: [Value; 3] = [
+        uuid::Uuid::new_v4().to_string().into(),
+        "1".into(),
+        "6".into(),
+    ];
+
+    // 项目数据
+    let data_project: [Value; 3] = [
+        uuid::Uuid::new_v4().to_string().into(),
+        "1".into(),
+        "7".into(),
+    ];
     result.push(data_user);
     result.push(data_role);
     result.push(data_menu);
     result.push(data_api);
+    result.push(data_tenant);
+    result.push(data_collect);
+    result.push(data_project);
 
     result
 }

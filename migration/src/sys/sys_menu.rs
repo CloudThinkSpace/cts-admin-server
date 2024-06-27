@@ -166,10 +166,49 @@ fn create_data() -> Vec<[Value; 9]> {
         1.into(),
         now.into()
     ];
+    // 租户数据
+    let data_tenant: [Value; 9] = [
+        "5".into(),
+        "租户管理".into(),
+        "1".into(),
+        5.into(),
+        "tenant/manager".into(),
+        "view/tenant.vue".into(),
+        "租户管理".into(),
+        1.into(),
+        now.into()
+    ];
+    // 采集数据
+    let data_collect: [Value; 9] = [
+        "6".into(),
+        "采集管理".into(),
+        "1".into(),
+        6.into(),
+        "collect/manager".into(),
+        "view/collect.vue".into(),
+        "采集管理".into(),
+        0.into(),
+        now.into()
+    ];
+    // 项目数据
+    let data_project: [Value; 9] = [
+        "7".into(),
+        "项目管理".into(),
+        "6".into(),
+        7.into(),
+        "project/manager".into(),
+        "view/project.vue".into(),
+        "项目管理".into(),
+        0.into(),
+        now.into()
+    ];
     result.push(data_user);
     result.push(data_role);
     result.push(data_menu);
     result.push(data_api);
+    result.push(data_tenant);
+    result.push(data_collect);
+    result.push(data_project);
 
     result
 }
