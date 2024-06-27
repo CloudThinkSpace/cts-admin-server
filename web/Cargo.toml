@@ -21,4 +21,4 @@ uuid = { workspace = true, features = ["v4"] }
 thiserror.workspace = true
 anyhow.workspace = true
 serde.workspace = true
-log = "0.4.21"
+async-recursion.workspace = true

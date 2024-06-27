@@ -122,7 +122,7 @@ fn create_data() -> Vec<[Value; 9]> {
     let data_user: [Value; 9] = [
         "1".into(),
         "用户管理".into(),
-        "1".into(),
+        "".into(),
         1.into(),
         "user/manager".into(),
         "view/user.vue".into(),
@@ -134,7 +134,7 @@ fn create_data() -> Vec<[Value; 9]> {
     let data_role: [Value; 9] = [
         "2".into(),
         "角色管理".into(),
-        "1".into(),
+        "".into(),
         2.into(),
         "role/manager".into(),
         "view/role.vue".into(),
@@ -146,7 +146,7 @@ fn create_data() -> Vec<[Value; 9]> {
     let data_menu: [Value; 9] = [
         "3".into(),
         "菜单管理".into(),
-        "1".into(),
+        "".into(),
         3.into(),
         "menu/manager".into(),
         "view/menu.vue".into(),
@@ -158,7 +158,7 @@ fn create_data() -> Vec<[Value; 9]> {
     let data_api: [Value; 9] = [
         "4".into(),
         "Api管理".into(),
-        "1".into(),
+        "".into(),
         4.into(),
         "menu/manager".into(),
         "view/menu.vue".into(),
@@ -170,7 +170,7 @@ fn create_data() -> Vec<[Value; 9]> {
     let data_tenant: [Value; 9] = [
         "5".into(),
         "租户管理".into(),
-        "1".into(),
+        "".into(),
         5.into(),
         "tenant/manager".into(),
         "view/tenant.vue".into(),
@@ -182,7 +182,7 @@ fn create_data() -> Vec<[Value; 9]> {
     let data_collect: [Value; 9] = [
         "6".into(),
         "采集管理".into(),
-        "1".into(),
+        "".into(),
         6.into(),
         "collect/manager".into(),
         "view/collect.vue".into(),

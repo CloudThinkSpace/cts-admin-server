@@ -7,3 +7,4 @@ pub mod sys_permission;
 
 const ADMIN_ID: &str = "1";
 const SYSTEM_MENU: i32 = 1;
+const SYSTEM_PARENT_MENU_ID: &str = "";

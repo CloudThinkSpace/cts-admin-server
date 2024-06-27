@@ -2,7 +2,7 @@ use sea_orm::prelude::DateTime;
 use serde::{Deserialize, Serialize};
 use entity::sys_menu::Model;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ResponseMenu {
     pub id: String,
