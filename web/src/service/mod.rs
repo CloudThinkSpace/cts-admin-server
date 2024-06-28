@@ -5,6 +5,7 @@ use tracing::info;
 
 pub mod sys;
 pub mod base;
+pub mod cts;
 
 
 /// 判断租户是否存在

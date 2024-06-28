@@ -29,6 +29,8 @@ pub struct AddFormTemplateDto {
 pub struct SearchFormTemplateDto {
     pub name: Option<String>,
     pub title: Option<String>,
+    pub version: Option<String>,
+    pub content: Option<String>,
     pub description: Option<String>,
     pub remark: Option<String>,
     pub page: Option<Page>,

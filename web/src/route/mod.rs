@@ -12,6 +12,7 @@ use crate::route::sys::sys_role::role_route;
 use crate::route::sys::sys_user::user_route;
 use middleware::layers as my_layers;
 use axum::middleware as axum_middleware;
+use crate::route::cst::form_template::form_template_route;
 
 pub mod sys;
 pub mod base;
@@ -47,8 +48,13 @@ fn auth_api() -> Router {
         // 合并权限路由
         .merge(permission_route());
 
+    let cts_router = Router::new()
+        // 表单路由
+        .merge(form_template_route());
+
     Router::new()
         .nest("/sys", router)
+        .nest("/cts", cts_router)
         .route_layer(axum_middleware::from_fn(my_layers::auth_layer::auth))
 }
 
