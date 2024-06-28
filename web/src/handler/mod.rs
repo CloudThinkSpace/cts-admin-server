@@ -7,6 +7,7 @@ use serde::Serialize;
 
 pub mod base;
 pub mod sys;
+pub mod cts;
 
 fn handle_force(params: HashMap<String, String>) -> bool {
     // 判断是否真删除

@@ -1,5 +1,7 @@
 use sea_orm_migration::prelude::*;
 
+use crate::TableOperation;
+
 #[derive(DeriveIden)]
 pub enum SysApi {
     Table,
@@ -25,8 +27,8 @@ pub enum SysApi {
     DeletedAt,
 }
 
-impl SysApi {
-    pub async fn create_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+impl TableOperation for SysApi {
+    async fn create_table(&self, manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .create_table(
                 Table::create()
@@ -52,8 +54,16 @@ impl SysApi {
             .await
     }
 
-    pub async fn drop_table(manager: &SchemaManager<'_>)-> Result<(), DbErr> {
+    async fn create_index(&self, _manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        Ok(())
+    }
+
+    async fn drop_table(&self, manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .drop_table(Table::drop().table(SysApi::Table).if_exists().to_owned()).await
+    }
+
+    async fn insert_data(&self, _manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        Ok(())
     }
 }

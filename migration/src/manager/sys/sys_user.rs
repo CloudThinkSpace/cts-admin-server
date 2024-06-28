@@ -2,8 +2,8 @@ use chrono::Local;
 use sea_orm::Statement;
 use sea_orm_migration::prelude::*;
 use common::md5;
-use crate::sys::sys_role::SysRole;
-use crate::sys::TableOperation;
+use crate::manager::sys::sys_role::SysRole;
+use crate::TableOperation;
 
 #[derive(DeriveIden)]
 pub enum SysUser {
@@ -39,9 +39,8 @@ pub enum SysUser {
     // 删除时间
     DeletedAt,
 }
-
 impl TableOperation for SysUser {
-    async fn create_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+    async fn create_table(&self, manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .create_table(
                 Table::create()
@@ -72,7 +71,7 @@ impl TableOperation for SysUser {
             .await
     }
 
-    async fn create_index(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+    async fn create_index(&self, manager: &SchemaManager<'_>) -> Result<(), DbErr> {
 
         // 创建唯一键
         manager.create_index(Index::create()
@@ -94,13 +93,13 @@ impl TableOperation for SysUser {
 
     }
 
-    async fn drop_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+    async fn drop_table(&self, manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .drop_table(Table::drop().table(SysUser::Table).if_exists().to_owned()).await?;
         Ok(())
     }
 
-    async fn insert_data(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+    async fn insert_data(&self, manager: &SchemaManager<'_>) -> Result<(), DbErr> {
 
         let db = manager.get_connection();
         // 生成时间戳

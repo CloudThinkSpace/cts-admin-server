@@ -15,6 +15,7 @@ use axum::middleware as axum_middleware;
 
 pub mod sys;
 pub mod base;
+pub mod cst;
 
 
 /// 系统api router
