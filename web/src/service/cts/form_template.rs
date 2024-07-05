@@ -73,7 +73,7 @@ pub async fn add(data: AddFormTemplateDto) -> Result<String> {
         id: Set(Uuid::new_v4().to_string()),
         name: Set(data.name),
         title: Set(data.title),
-        content: Set(data.content),
+        content: Set(Some(data.content)),
         remark: Set(data.remark),
         version: Set(data.version),
         description: Set(data.description),
@@ -109,7 +109,7 @@ pub async fn update(id: String, update_form_template: UpdateFormTemplateDto) -> 
         }
         // 更新content
         if update_form_template.content.is_some() {
-            current.content = Set(update_form_template.content.unwrap())
+            current.content = Set(update_form_template.content)
         }
         // 更新 version
         if update_form_template.version.is_some() {

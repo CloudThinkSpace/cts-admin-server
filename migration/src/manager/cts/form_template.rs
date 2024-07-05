@@ -41,7 +41,7 @@ impl TableOperation for  FormTemplate {
                     )
                     .col(ColumnDef::new(FormTemplate::Name).string().not_null())
                     .col(ColumnDef::new(FormTemplate::Title).string().not_null())
-                    .col(ColumnDef::new(FormTemplate::Content).string().not_null())
+                    .col(ColumnDef::new(FormTemplate::Content).string())
                     .col(ColumnDef::new(FormTemplate::Version).string().not_null())
                     .col(ColumnDef::new(FormTemplate::Description).string())
                     .col(ColumnDef::new(FormTemplate::Remark).string())

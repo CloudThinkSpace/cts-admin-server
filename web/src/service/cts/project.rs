@@ -1,16 +1,15 @@
 use anyhow::{bail, Result};
 use axum::extract::Multipart;
 use chrono::Local;
-use sea_orm::{ActiveModelTrait, ColumnTrait, ConnectionTrait, EntityTrait, NotSet, PaginatorTrait, QueryFilter, TransactionTrait};
+use sea_orm::{ActiveModelTrait, ColumnTrait, ConnectionTrait, EntityTrait, NotSet, PaginatorTrait, QueryFilter, QuerySelect, TransactionTrait};
 use sea_orm::ActiveValue::Set;
 use uuid::Uuid;
 
 use common::db::{create_table_sql, get_db, insert_data_sql};
-use entity::form_template::Entity as FormTemplate;
+use entity::form_template::{Entity as FormTemplate, Column as FormTemplateColumn};
 use entity::project::{ActiveModel, Column as ProjectColumn, Entity as Project};
 use models::dto::{handler_page, PageResult};
 use models::dto::cts::request::project::{SearchProjectDto, UpdateProjectDto};
-use models::dto::cts::response::form_template::ResponseFormTemplate;
 use models::dto::cts::response::project::ResponseProject;
 use project_form::form::form_util::{filter_code_lon_lat, handler_form_data, handler_form_header, parse};
 use project_form::project::parse_check_project;
@@ -29,9 +28,26 @@ pub async fn get_by_id(id: String) -> Result<Option<ResponseProject>> {
             bail!("编号：{}，数据不存在",id)
         }
         Some(data) => {
-            let role: ResponseProject = data.into();
             // formTemplate数据
-            Ok(Some(role))
+            let form_template_id = data.form_template_id.clone();
+            let mut project: ResponseProject = data.into();
+            let form_template_model = FormTemplate::find_by_id(form_template_id)
+                .select_only()
+                .columns([
+                    FormTemplateColumn::Id,
+                    FormTemplateColumn::Name,
+                    FormTemplateColumn::Version,
+                    FormTemplateColumn::Remark,
+                    FormTemplateColumn::Title,
+                    FormTemplateColumn::CreatedAt,
+                    FormTemplateColumn::UpdatedAt,
+                ])
+                .one(&db).await?;
+            if let Some(form)= form_template_model {
+                let form_template = form.into();
+                project.form_template = Some(form_template);
+            }
+            Ok(Some(project))
         }
     }
 }
@@ -47,10 +63,11 @@ pub async fn delete_by_id(id: String, force: bool) -> Result<String> {
         match force {
             true => {
                 // 删除表单
-                let delete_result = Project::delete_by_id(id)
-                    .exec(&db)
-                    .await?;
-                Ok(format!("{}", delete_result.rows_affected))
+                // let delete_result = Project::delete_by_id(id)
+                //     .exec(&db)
+                //     .await?;
+                // Ok(format!("{}", delete_result.rows_affected))
+                bail!("项目不能真删除")
             }
             false => {
                 // 更新删除字段
@@ -80,7 +97,6 @@ pub async fn add(mut multipart: Multipart) -> Result<String> {
     }
     // 查询表单数据
     let form_template = FormTemplate::find_by_id(data.form_template_id.clone())
-        .into_model::<ResponseFormTemplate>()
         .one(&db)
         .await?;
     // 表单字符串
@@ -89,7 +105,7 @@ pub async fn add(mut multipart: Multipart) -> Result<String> {
             bail!("表单不存在")
         }
         Some(form) => {
-            form.content
+            form.content.unwrap()
         }
     };
     // 解析表单数据，转换成表单对象
@@ -190,10 +206,6 @@ pub async fn update(id: String, update_project: UpdateProjectDto) -> Result<Stri
         if update_project.status.is_some() {
             current.status = Set(update_project.status.unwrap())
         }
-        // 更新type
-        if update_project.r#type.is_some() {
-            current.r#type = Set(update_project.r#type.unwrap())
-        }
         // 更新备注
         if update_project.remark.is_some() {
             current.remark = Set(Some(update_project.remark.unwrap()))
@@ -259,6 +271,7 @@ pub async fn search(data: SearchProjectDto) -> Result<PageResult<ResponseProject
         .into_iter()
         .map(|item| item.into())
         .collect();
+    // todo 查询表单信息注入项目对象中
     let result = PageResult::new(list, total, pages, page_no);
     Ok(result)
 }

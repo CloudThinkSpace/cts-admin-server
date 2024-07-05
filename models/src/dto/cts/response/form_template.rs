@@ -10,7 +10,7 @@ pub struct ResponseFormTemplate {
     pub name: String,
     pub title: String,
     pub version: String,
-    pub content: String,
+    pub content: Option<String>,
     pub description: Option<String>,
     pub remark: Option<String>,
     pub created_at: DateTime,

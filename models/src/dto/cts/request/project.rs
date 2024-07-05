@@ -7,10 +7,10 @@ use crate::dto::{Order, Page};
 pub struct UpdateProjectDto {
     pub name: Option<String>,
     pub code: Option<String>,
-    pub r#type: Option<i32>,
     pub status: Option<i32>,
     pub description: Option<String>,
     pub remark: Option<String>,
+    pub form_template_id: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromQueryResult)]

@@ -9,7 +9,7 @@ pub struct Model {
     pub id: String,
     pub name: String,
     pub title: String,
-    pub content: String,
+    pub content: Option<String>,
     pub version: String,
     pub description: Option<String>,
     pub remark: Option<String>,
