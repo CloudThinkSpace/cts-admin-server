@@ -8,7 +8,9 @@ authors.workspace = true
 entity.workspace = true
 common.workspace = true
 models.workspace = true
-axum.workspace = true
+project-form.workspace = true
+
+axum = {workspace = true, features = ["multipart"]}
 middleware.workspace  =true
 tokio = { workspace = true, features = ["full"] }
 tower.workspace = true
@@ -22,3 +24,5 @@ thiserror.workspace = true
 anyhow.workspace = true
 serde.workspace = true
 async-recursion.workspace = true
+futures = "0.3.30"
+tokio-util.workspace = true

@@ -1,0 +1,32 @@
+[package]
+name = "project-form"
+version = "0.1.0"
+authors.workspace = true
+homepage.workspace = true
+publish.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+readme.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+axum = { workspace = true, features = ["multipart"] }
+tracing.workspace = true
+uuid = { workspace = true, features = ["v4"] }
+sea-orm = { workspace = true }
+models.workspace = true
+tokio.workspace = true
+tokio-util.workspace = true
+futures.workspace = true
+async-trait.workspace = true
+futures-util.workspace = true
+http.workspace = true
+multer.workspace = true
+chrono.workspace = true
+csv.workspace = true
+async-recursion.workspace = true
+common.workspace = true

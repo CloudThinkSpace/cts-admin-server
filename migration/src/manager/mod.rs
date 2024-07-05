@@ -1,6 +1,7 @@
 use sea_orm::DbErr;
 use sea_orm_migration::SchemaManager;
 use crate::manager::cts::form_template::FormTemplate;
+use crate::manager::cts::project::Project;
 use crate::manager::sys::sys_api::SysApi;
 use crate::manager::sys::sys_menu::SysMenu;
 use crate::manager::sys::sys_role::SysRole;
@@ -21,7 +22,9 @@ pub async fn create_tables(manager: &SchemaManager<'_>) -> Result<(), DbErr>
     SysRole::Table.create_table(manager).await?;
     SysApi::Table.create_table(manager).await?;
     SysRoleMenu::Table.create_table(manager).await?;
+
     FormTemplate::Table.create_table(manager).await?;
+    Project::Table.create_table(manager).await?;
 
     Ok(())
 }
@@ -34,7 +37,9 @@ pub async fn create_indices(manager: &SchemaManager<'_>) -> Result<(), DbErr>
     SysApi::Table.create_index(manager).await?;
     SysMenu::Table.create_index(manager).await?;
     SysRoleMenu::Table.create_index(manager).await?;
+
     FormTemplate::Table.create_index(manager).await?;
+    Project::Table.create_index(manager).await?;
     Ok(())
 }
 
@@ -46,7 +51,9 @@ pub async fn drop_tables(manager: &SchemaManager<'_>) -> Result<(), DbErr>
     SysRole::Table.drop_table(manager).await?;
     SysApi::Table.drop_table(manager).await?;
     SysMenu::Table.drop_table(manager).await?;
+
     FormTemplate::Table.drop_table(manager).await?;
+    Project::Table.drop_table(manager).await?;
     Ok(())
 }
 
@@ -58,6 +65,8 @@ pub async fn insert_data(manager: &SchemaManager<'_>) -> Result<(), DbErr>
     SysApi::Table.insert_data(manager).await?;
     SysMenu::Table.insert_data(manager).await?;
     SysRoleMenu::Table.insert_data(manager).await?;
+
     FormTemplate::Table.insert_data(manager).await?;
+    Project::Table.insert_data(manager).await?;
     Ok(())
 }

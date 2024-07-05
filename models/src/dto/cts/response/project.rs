@@ -1,16 +1,15 @@
-use sea_orm::FromQueryResult;
 use sea_orm::prelude::DateTime;
 use serde::{Deserialize, Serialize};
-use entity::form_template::Model;
+use entity::project::Model;
 
-#[derive(Debug, Serialize, Deserialize, Clone, FromQueryResult)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct ResponseFormTemplate {
+pub struct ResponseProject {
     pub id: String,
     pub name: String,
-    pub title: String,
-    pub version: String,
-    pub content: String,
+    pub code: String,
+    pub r#type: i32,
+    pub status: i32,
     pub description: Option<String>,
     pub remark: Option<String>,
     pub created_at: DateTime,
@@ -18,18 +17,18 @@ pub struct ResponseFormTemplate {
 }
 
 
-impl From<Model> for ResponseFormTemplate {
+impl From<Model> for ResponseProject {
     fn from(value: Model) -> Self {
         Self {
             id: value.id,
             name: value.name,
-            title: value.title,
-            version: "".to_string(),
+            code: value.code,
+            r#type: value.r#type,
+            status: value.status,
             remark: value.remark,
             description: value.description,
             created_at: value.created_at,
             updated_at: value.updated_at,
-            content: value.content,
         }
     }
 }
