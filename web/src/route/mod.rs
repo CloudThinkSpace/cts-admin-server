@@ -4,7 +4,6 @@ use axum::response::IntoResponse;
 use axum::Router;
 use axum::routing::get;
 use response_utils::res::ResResult;
-use crate::route::base::upload_download::upload_download_route;
 use crate::route::sys::sys_api::api_route;
 use crate::route::sys::sys_tenant::domain_route;
 use crate::route::sys::sys_menu::menu_route;
@@ -16,6 +15,7 @@ use axum::middleware as axum_middleware;
 use crate::route::base::login_logout::login_route;
 use crate::route::cst::form_template::form_template_route;
 use crate::route::cst::project::project_route;
+use crate::route::sys::upload_download::upload_download_route;
 
 pub mod sys;
 pub mod base;
@@ -47,6 +47,8 @@ fn auth_api() -> Router {
         .merge(domain_route())
         // 合并api路由
         .merge(api_route())
+        // 上传文件服务
+        .merge(upload_download_route())
         // 合并权限路由
         .merge(permission_route());
 
@@ -66,7 +68,6 @@ fn auth_api() -> Router {
 fn no_auth_api() -> Router {
     Router::new()
         .merge(login_route())
-        .merge(upload_download_route())
 }
 
 /// 服务错误处理函数
