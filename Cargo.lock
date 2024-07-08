@@ -3657,6 +3657,7 @@ dependencies = [
  "response_utils",
  "sea-orm 0.12.15",
  "serde",
+ "serde_json",
  "thiserror",
  "tokio",
  "tokio-util",

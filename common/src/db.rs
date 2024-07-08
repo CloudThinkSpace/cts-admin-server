@@ -1,6 +1,8 @@
 pub mod db_type;
 pub mod form;
+pub mod select;
 
+use std::collections::HashMap;
 use std::time::Duration;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use tokio::sync::OnceCell;
@@ -9,6 +11,8 @@ use crate::db::db_type::DbType;
 
 static GLOBAL_DB: OnceCell<DatabaseConnection> = OnceCell::const_new();
 
+
+/// 获取数据连接对象
 pub async fn get_db() -> DatabaseConnection {
     GLOBAL_DB.get_or_init(|| async {
         let config = Config::init_config();
@@ -16,6 +20,7 @@ pub async fn get_db() -> DatabaseConnection {
     }).await.clone()
 }
 
+/// 初始化数据库链接函数
 pub async fn get_init_db_pool(config: &Config) -> DatabaseConnection {
     let mut opt = ConnectOptions::new(&config.database.url);
     opt.max_connections(config.database.max_connections)
@@ -28,6 +33,7 @@ pub async fn get_init_db_pool(config: &Config) -> DatabaseConnection {
     Database::connect(opt).await.expect("连接数据库失败")
 }
 
+/// 创建表sql函数
 pub fn create_table_sql(table_name: &str, fields: &Vec<String>, is_form: bool) -> String {
     let mut create_sql = format!("create table if not exists {}(", table_name);
     // 添加 主键
@@ -52,6 +58,7 @@ pub fn create_table_sql(table_name: &str, fields: &Vec<String>, is_form: bool) -
     create_sql
 }
 
+/// 插入数据sql函数
 pub fn insert_data_sql(table_name: &str, fields: &Vec<String>, data: &Vec<Box<dyn DbType>>) -> String {
     let mut sql = format!("INSERT INTO {} ", table_name);
     sql.push_str("(");
@@ -70,6 +77,19 @@ pub fn insert_data_sql(table_name: &str, fields: &Vec<String>, data: &Vec<Box<dy
     let current_sql = &sql[..sql.len() - 1];
     let mut sql = current_sql.to_string();
     sql.push_str(")");
+    sql
+}
+
+/// 更新数据sql函数
+pub fn update_data_sql(table_name: &str, id: &str, data: HashMap<String, Box<dyn DbType>>) -> String {
+    let mut sql = format!("UPDATE {} SET ", table_name);
+    for (key, value) in data.into_iter() {
+        sql.push_str(&format!("{}={},", key, value.display()));
+    }
+    // 移除最后的逗号
+    let current_sql = &sql[..sql.len() - 1];
+    let mut sql = current_sql.to_string();
+    sql.push_str(&format!(" WHERE id = '{}'", id));
     sql
 }
 

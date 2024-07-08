@@ -11,7 +11,6 @@ pub fn project_route() -> Router {
         .route("/update/:id", post(project::update))
         .route("/delete/:id", get(project::delete))
         .route("/query/:id", get(project::query))
-        .route("/upload", post(project::upload))
         .route("/search", post(project::search));
 
     Router::new()

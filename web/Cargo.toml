@@ -23,6 +23,7 @@ uuid = { workspace = true, features = ["v4"] }
 thiserror.workspace = true
 anyhow.workspace = true
 serde.workspace = true
+serde_json.workspace = true
 async-recursion.workspace = true
-futures = "0.3.30"
+futures.workspace = true
 tokio-util.workspace = true

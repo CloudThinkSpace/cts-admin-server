@@ -1,6 +1,7 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use chrono::NaiveDateTime;
 
+#[derive(Debug)]
 pub struct Null;
 
 impl Display for Null {
@@ -9,7 +10,7 @@ impl Display for Null {
     }
 }
 
-pub trait DbType: Display {
+pub trait DbType: Display + Debug {
     fn display(&self) -> String;
     fn source(&self) -> String {
         format!("{self}")
@@ -22,7 +23,23 @@ impl DbType for String {
     }
 }
 
+impl DbType for bool {
+    fn display(&self) -> String {
+        format!("{self}")
+    }
+}
+
 impl DbType for i32 {
+    fn display(&self) -> String {
+        format!("{self}")
+    }
+}
+impl DbType for f64 {
+    fn display(&self) -> String {
+        format!("{self}")
+    }
+}
+impl DbType for i64 {
     fn display(&self) -> String {
         format!("{self}")
     }
