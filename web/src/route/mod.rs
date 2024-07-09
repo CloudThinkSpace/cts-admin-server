@@ -13,6 +13,7 @@ use crate::route::sys::sys_user::user_route;
 use middleware::layers as my_layers;
 use axum::middleware as axum_middleware;
 use crate::route::base::login_logout::login_route;
+use crate::route::cst::form::form_data_route;
 use crate::route::cst::form_template::form_template_route;
 use crate::route::cst::project::project_route;
 use crate::route::cst::task::task_route;
@@ -57,6 +58,7 @@ fn auth_api() -> Router {
         // 表单路由
         .merge(form_template_route())
         .merge(task_route())
+        .merge(form_data_route())
         .merge(project_route());
 
     Router::new()

@@ -83,7 +83,7 @@ pub fn insert_data_sql(table_name: &str, fields: &Vec<String>, data: &Vec<Box<dy
 /// 更新数据sql函数
 pub fn update_data_sql(table_name: &str, id: &str, data: HashMap<String, Box<dyn DbType>>) -> String {
     let mut sql = format!("UPDATE {} SET ", table_name);
-    for (key, value) in data.into_iter() {
+    for (key, value) in data.iter() {
         sql.push_str(&format!("{}={},", key, value.display()));
     }
     // 移除最后的逗号
