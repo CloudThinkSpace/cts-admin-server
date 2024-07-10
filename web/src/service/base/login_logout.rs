@@ -3,20 +3,22 @@ use axum::http::HeaderMap;
 use chrono::{Duration, Utc};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 
+use anyhow::{bail, Result};
 use common::auth::jwt::{decode_token, encode_token};
 use common::db::get_db;
 use common::md5::check_password;
+use entity::sys_role::Entity as SysRole;
 use entity::sys_user::{Column as SysUserColumn, Entity as SysUser};
 use models::dto::sys::response::base::{ResponseToken, Token};
 use models::dto::sys::response::sys_user::ResponseUser;
-use anyhow::{bail, Result};
 
 pub async fn login(username: String, password: String) -> Result<ResponseToken> {
     let db = get_db().await;
     // 查询用户
     let user = SysUser::find()
         .filter(SysUserColumn::Username.eq(username))
-        .one(&db).await?;
+        .one(&db)
+        .await?;
     if let Some(data) = user {
         // 获取用户密码
         let db_password = data.password.clone();
@@ -24,12 +26,19 @@ pub async fn login(username: String, password: String) -> Result<ResponseToken> 
         let is_ok = check_password(db_password, password);
         match is_ok {
             true => {
+                let role_id = data.role_id.clone();
+                // 查询角色信息
+                let role = SysRole::find_by_id(role_id).one(&db).await?;
                 // 生成token对象
-                let user: ResponseUser = data.into();
-                let  exp = (Utc::now() + Duration::seconds(3600)).timestamp() as u64;
+                let mut user: ResponseUser = data.into();
+                if let Some(role) = role {
+                    let current_role = role.into();
+                    user.role = Some(current_role);
+                }
+                let exp = (Utc::now() + Duration::seconds(3600)).timestamp() as u64;
                 let token = encode_token(user.clone(), exp)?;
 
-                let token = ResponseToken::new(user,Token::new(token, exp));
+                let token = ResponseToken::new(user, Token::new(token, exp));
 
                 Ok(token)
             }
@@ -49,7 +58,7 @@ pub async fn logout(headers: HeaderMap) -> Result<()> {
         // 判断是否为空
         if token.is_empty() {
             bail!("token不能为空".to_string())
-        }else {
+        } else {
             let token_str = token.to_str()?;
             // 验证token是否有效
             let result = decode_token::<ResponseUser>(token_str)?;
@@ -57,8 +66,8 @@ pub async fn logout(headers: HeaderMap) -> Result<()> {
             println!("{:?}", result);
             Ok(())
         }
-
-    }else {
+    } else {
         bail!("退出失败，没有token信息".to_string())
     }
 }
+

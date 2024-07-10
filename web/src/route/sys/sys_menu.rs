@@ -11,7 +11,6 @@ pub fn menu_route() -> Router {
         .route("/update/:id", post(sys_menu::update))
         .route("/delete/:id", get(sys_menu::delete))
         .route("/query/:id", get(sys_menu::query))
-        .route("/self", get(sys_menu::role_menu_tree))
         .route("/search", post(sys_menu::search));
 
     Router::new()

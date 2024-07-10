@@ -1,20 +1,17 @@
 use anyhow::{bail, Result};
-use async_recursion::async_recursion;
 use chrono::Local;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, JoinType, NotSet, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, RelationTrait, TransactionTrait};
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, NotSet, PaginatorTrait, QueryFilter, QueryOrder, TransactionTrait};
 use sea_orm::ActiveValue::Set;
-use sea_orm::sea_query::{Expr, IntoCondition};
 use uuid::Uuid;
 
 use common::db::get_db;
 use common::error::CtsError;
 use entity::sys_menu::{ActiveModel, Column as SysMenuColumn, Entity as SysMenu};
-use entity::sys_role_menu::{Column as SysRoleMenu, Relation as SysRoleMenuRelation};
 use models::dto::{handler_page, PageResult};
 use models::dto::sys::request::sys_menu::{AddMenuDto, SearchMenuDto, UpdateMenuDto};
 use models::dto::sys::response::sys_menu::ResponseMenu;
 
-use crate::service::sys::{SYSTEM_MENU, SYSTEM_PARENT_MENU_ID};
+use crate::service::sys::SYSTEM_MENU;
 
 /// 根据菜单编号查询数据
 /// @param id 菜单编号
@@ -296,49 +293,3 @@ pub async fn search(data: SearchMenuDto) -> Result<PageResult<ResponseMenu>> {
 
     Ok(result)
 }
-
-pub async fn role_menu_tree(role_id: String) -> Result<Vec<ResponseMenu>> {
-    let db = get_db().await;
-    let result:Vec<ResponseMenu> = SysMenu::find()
-        .join(JoinType::LeftJoin,
-              SysRoleMenuRelation::SysMenu
-                  .def().rev()
-                  .on_condition(move |_left, right| {
-                      Expr::col((right, SysRoleMenu::RoleId))
-                          .eq(role_id.clone())
-                          .into_condition()
-                  }),
-        )
-        .order_by_asc(SysMenuColumn::Sort)
-        .all(&db).await?
-        .into_iter()
-        .map(|model| model.into())
-        .collect();
-
-    let root_nodes = root_tree(&result).await;
-    let data = child_tree(root_nodes, &result).await;
-    Ok(data)
-}
-
-async fn root_tree(nodes: &[ResponseMenu]) -> Vec<ResponseMenu> {
-    nodes
-        .iter()
-        .filter(|item| item.parent_id == SYSTEM_PARENT_MENU_ID)
-        .cloned()
-        .collect()
-}
-
-#[async_recursion]
-async fn child_tree(mut roots: Vec<ResponseMenu>, nodes: &[ResponseMenu]) -> Vec<ResponseMenu> {
-    for root in roots.iter_mut() {
-        let data: Vec<ResponseMenu> = nodes
-            .iter()
-            .filter(|item| item.parent_id == root.id)
-            .cloned()
-            .collect();
-        let data = child_tree(data.clone(), nodes).await;
-        root.children = Some(data);
-    }
-    return roots;
-}
-

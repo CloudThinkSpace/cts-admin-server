@@ -1,5 +1,5 @@
 use axum::Router;
-use axum::routing::{get, post};
+use axum::routing::post;
 use crate::handler::sys::sys_permission;
 
 /// 权限路由
@@ -7,12 +7,11 @@ use crate::handler::sys::sys_permission;
 ///
 pub fn permission_route() -> Router {
     let router = Router::new()
-        .route("/add", post(sys_permission::add))
-        .route("/update", post(sys_permission::update))
-        .route("/delete", get(sys_permission::delete))
-        .route("/query", get(sys_permission::query))
-        .route("/search", post(sys_permission::search));
+        .route("/set/menu", post(sys_permission::set_menu))
+        .route("/set/api", post(sys_permission::set_api))
+        .route("/search/menu", post(sys_permission::search_menu))
+        .route("/search/api", post(sys_permission::search_api));
 
     Router::new()
-        .nest("/permission", router)
+        .nest("/authorize", router)
 }

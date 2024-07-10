@@ -8,5 +8,6 @@ pub mod sys_role;
 pub mod sys_tenant;
 pub mod sys_user;
 pub mod sys_role_menu;
+pub mod sys_role_api;
 pub mod form_template;
 pub mod project;

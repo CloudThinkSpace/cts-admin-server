@@ -2,17 +2,17 @@ use std::collections::HashMap;
 
 use anyhow::{bail, Result};
 use chrono::Local;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, NotSet, PaginatorTrait, QueryFilter};
 use sea_orm::ActiveValue::Set;
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, NotSet, PaginatorTrait, QueryFilter};
 use uuid::Uuid;
 
 use common::db::get_db;
 use entity::sys_role::{ActiveModel, Column as SysRoleColumn, Entity as SysRole};
 use entity::sys_tenant::{Column as SysTenantColumn, Entity as SysTenant};
-use models::dto::{handler_page, PageResult};
 use models::dto::sys::request::sys_role::{AddRoleDto, SearchRoleDto, UpdateRoleDto};
 use models::dto::sys::response::sys_role::ResponseRole;
 use models::dto::sys::response::sys_tenant::ResponseTenant;
+use models::dto::{handler_page, PageResult};
 
 use crate::service::has_tenant;
 use crate::service::sys::ADMIN_ID;
@@ -24,16 +24,18 @@ pub async fn get_by_id(id: String) -> Result<Option<ResponseRole>> {
     let result = SysRole::find_by_id(id.clone())
         // 保障删除字段为空
         .filter(SysRoleColumn::DeletedAt.is_null())
-        .one(&db).await?;
+        .one(&db)
+        .await?;
     match result {
         None => {
-            bail!("编号：{}，数据不存在",id)
+            bail!("编号：{}，数据不存在", id)
         }
         Some(data) => {
             let mut role: ResponseRole = data.clone().into();
             // 查询租户数据
             let tenant = SysTenant::find_by_id(data.tenant_id.unwrap())
-                .one(&db).await?;
+                .one(&db)
+                .await?;
             if tenant.is_some() {
                 let tenant = tenant.unwrap();
                 role.tenant = Some(tenant.into());
@@ -58,8 +60,7 @@ pub async fn delete_by_id(id: String, force: bool) -> Result<String> {
             match force {
                 true => {
                     // 删除角色
-                    let delete_result = SysRole::delete_by_id(id)
-                        .exec(&db).await?;
+                    let delete_result = SysRole::delete_by_id(id).exec(&db).await?;
                     Ok(format!("{}", delete_result.rows_affected))
                 }
                 false => {
@@ -169,19 +170,25 @@ pub async fn search(data: SearchRoleDto) -> Result<PageResult<ResponseRole>> {
     let total = select.clone().count(&db).await?;
     let (page_no, page_size) = handler_page(data.page);
     // 分页对象
-    let paginate = select
-        .paginate(&db, page_size);
+    let paginate = select.paginate(&db, page_size);
     // 页数
     let pages = paginate.num_pages().await?;
 
     // 查询角色数据
     let list = paginate.fetch_page(page_no - 1).await?;
 
-    let tenant_ids: Vec<String> = list.iter().filter_map(|item| item.tenant_id.clone()).collect();
+    let tenant_ids: Vec<String> = list
+        .iter()
+        .filter_map(|item| item.tenant_id.clone())
+        .collect();
 
     let tenants = SysTenant::find()
         .filter(SysTenantColumn::Id.is_in(tenant_ids))
-        .all(&db).await?.iter().map(|item| (item.id.clone(), item.clone().into())).collect::<HashMap<String,ResponseTenant>>();
+        .all(&db)
+        .await?
+        .iter()
+        .map(|item| (item.id.clone(), item.clone().into()))
+        .collect::<HashMap<String, ResponseTenant>>();
 
     let mut result = Vec::new();
     // 重组数据

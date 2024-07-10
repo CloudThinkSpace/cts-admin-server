@@ -5,6 +5,7 @@ pub use super::project::Entity as Project;
 pub use super::sys_api::Entity as SysApi;
 pub use super::sys_menu::Entity as SysMenu;
 pub use super::sys_role::Entity as SysRole;
+pub use super::sys_role_api::Entity as SysRoleApi;
 pub use super::sys_role_menu::Entity as SysRoleMenu;
 pub use super::sys_tenant::Entity as SysTenant;
 pub use super::sys_user::Entity as SysUser;
