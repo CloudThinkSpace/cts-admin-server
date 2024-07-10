@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use anyhow::{bail, Result};
 use chrono::Local;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, NotSet, PaginatorTrait, QueryFilter};
 use sea_orm::ActiveValue::Set;
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, NotSet, PaginatorTrait, QueryFilter};
 use uuid::Uuid;
 
 use common::db::get_db;
@@ -11,11 +11,11 @@ use common::md5::generate_md5;
 use entity::sys_role::{Column as SysRoleColumn, Entity as SysRole};
 use entity::sys_tenant::{Column as SysTenantColumn, Entity as SysTenant};
 use entity::sys_user::{ActiveModel, Column as SysUserColumn, Entity as SysUser};
-use models::dto::{handler_page, PageResult};
 use models::dto::sys::request::sys_user::{AddUserDto, SearchUserDto, UpdateUserDto};
 use models::dto::sys::response::sys_role::ResponseRole;
 use models::dto::sys::response::sys_tenant::ResponseTenant;
 use models::dto::sys::response::sys_user::ResponseUser;
+use models::dto::{handler_page, PageResult};
 
 use crate::service::has_tenant;
 use crate::service::sys::ADMIN_ID;
@@ -27,23 +27,23 @@ pub async fn get_by_id(id: String) -> Result<Option<ResponseUser>> {
     let result = SysUser::find_by_id(id)
         // 保障删除字段为空
         .filter(SysUserColumn::DeletedAt.is_null())
-        .one(&db).await?;
+        .one(&db)
+        .await?;
     match result {
-        None => {
-            Ok(None)
-        }
+        None => Ok(None),
         Some(data) => {
             let mut user: ResponseUser = data.clone().into();
             // 查询用户和租户
             if data.tenant_id.is_some() {
-                let tenant = SysTenant::find_by_id(data.tenant_id.unwrap()).one(&db).await?;
+                let tenant = SysTenant::find_by_id(data.tenant_id.unwrap())
+                    .one(&db)
+                    .await?;
                 user.tenant = Some(tenant.unwrap().into());
             } else {
                 let role = SysRole::find_by_id(data.role_id).one(&db).await?;
                 if role.is_some() {
                     user.role = Some(role.unwrap().into());
                 }
-
             }
             Ok(Some(user))
         }
@@ -55,8 +55,7 @@ pub async fn get_by_id(id: String) -> Result<Option<ResponseUser>> {
 pub async fn delete_by_id(id: String, force: bool) -> Result<String> {
     let db = get_db().await;
     // 查询用户信息
-    let result = SysUser::find_by_id(id.clone())
-        .one(&db).await?;
+    let result = SysUser::find_by_id(id.clone()).one(&db).await?;
     if let Some(data) = result {
         // 查看用户是否为超级管理员
         if ADMIN_ID == data.id {
@@ -66,8 +65,7 @@ pub async fn delete_by_id(id: String, force: bool) -> Result<String> {
             match force {
                 true => {
                     // 删除用户
-                    let _delete_result = SysUser::delete_by_id(id)
-                        .exec(&db).await?;
+                    let _delete_result = SysUser::delete_by_id(id).exec(&db).await?;
                     Ok("删除成功".to_string())
                 }
                 false => {
@@ -97,7 +95,8 @@ pub async fn add(data: AddUserDto) -> Result<String> {
     // 用户名查询数据
     let user = SysUser::find()
         .filter(SysUserColumn::Username.eq(data.username.clone()))
-        .one(&db).await?;
+        .one(&db)
+        .await?;
     // 判断用户是否存在
     if user.is_some() {
         bail!("用户名不能重复，该用户已经存在".to_string())
@@ -126,7 +125,6 @@ pub async fn add(data: AddUserDto) -> Result<String> {
     Ok(add_user.id)
 }
 
-
 /// 更新用户信息
 /// @param update_user 待更新的用户对象
 pub async fn update(id: String, update_user: UpdateUserDto) -> Result<String> {
@@ -139,8 +137,7 @@ pub async fn update(id: String, update_user: UpdateUserDto) -> Result<String> {
         bail!("超级用户无法更新".to_string())
     }
     // 查询用户信息
-    let result = SysUser::find_by_id(id.clone())
-        .one(&db).await?;
+    let result = SysUser::find_by_id(id.clone()).one(&db).await?;
     // 更新用户名
     if let Some(current_user) = result {
         let mut current_user: ActiveModel = current_user.into();
@@ -197,15 +194,12 @@ pub async fn update_status(id: String, status: i32) -> Result<String> {
         bail!("超级用户无法变更状态".to_string())
     }
     // 查询用户信息
-    let result = SysUser::find_by_id(id)
-        .one(&db).await?;
+    let result = SysUser::find_by_id(id).one(&db).await?;
     // 更新用户名
     if let Some(current_user) = result {
         let mut current_user: ActiveModel = current_user.into();
         match status {
-            0 | 1 => {
-                current_user.status = Set(status)
-            }
+            0 | 1 => current_user.status = Set(status),
             _ => {
                 bail!("用户状态值不合法，只能是【0或1】".to_string())
             }
@@ -255,13 +249,11 @@ pub async fn search(data: SearchUserDto) -> Result<PageResult<ResponseUser>> {
     let (page_no, page_size) = handler_page(data.page);
 
     // 分页总数
-    let paginate = select
-        .paginate(&db, page_size);
+    let paginate = select.paginate(&db, page_size);
     // 页数
     let pages = paginate.num_pages().await?;
     // 查询用户数据
     let user_list = paginate.fetch_page(page_no - 1).await?;
-
 
     let mut tenant_ids = Vec::new();
     let mut role_ids = Vec::new();
@@ -275,12 +267,21 @@ pub async fn search(data: SearchUserDto) -> Result<PageResult<ResponseUser>> {
     }
 
     // 查询租户信息
-    let tenant_map:HashMap<String, ResponseTenant> = SysTenant::find()
+    let tenant_map: HashMap<String, ResponseTenant> = SysTenant::find()
         .filter(SysTenantColumn::Id.is_in(tenant_ids))
-        .all(&db).await?.iter().map(|item| (item.id.clone(), item.clone().into())).collect::<HashMap<_, _>>();
+        .all(&db)
+        .await?
+        .iter()
+        .map(|item| (item.id.clone(), item.clone().into()))
+        .collect::<HashMap<_, _>>();
     // 查询角色信息
-    let role_map:HashMap<String, ResponseRole> = SysRole::find().filter(SysRoleColumn::Id.is_in(role_ids))
-        .all(&db).await?.iter().map(|item| (item.id.clone(), item.clone().into())).collect::<HashMap<_, _>>();
+    let role_map: HashMap<String, ResponseRole> = SysRole::find()
+        .filter(SysRoleColumn::Id.is_in(role_ids))
+        .all(&db)
+        .await?
+        .iter()
+        .map(|item| (item.id.clone(), item.clone().into()))
+        .collect::<HashMap<_, _>>();
 
     let mut result = Vec::new();
     // 遍历数据
@@ -290,12 +291,12 @@ pub async fn search(data: SearchUserDto) -> Result<PageResult<ResponseUser>> {
         if user.tenant_id.is_some() {
             let tenant = tenant_map.get(&user.tenant_id.clone().unwrap());
             if tenant.is_some() {
-                data.tenant = Some(tenant.unwrap().clone().into())
+                data.tenant = Some(tenant.unwrap().clone());
             }
         }
         let role = role_map.get(&user.role_id.clone());
         if role.is_some() {
-            data.role = Some(role.unwrap().clone().into());
+            data.role = Some(role.unwrap().clone());
         }
         result.push(data);
     }

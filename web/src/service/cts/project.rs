@@ -117,7 +117,7 @@ pub async fn add(mut multipart: Multipart) -> Result<String> {
     // 任务表名
     let mut task_table_name = String::from("task_");
     // 数据源uuid
-    let uuid = Uuid::new_v4().to_string().replace("-", "");
+    let uuid = Uuid::new_v4().to_string().replace('-', "");
     // 数据表和任务表拼接uuid
     data_table_name.push_str(&uuid);
     task_table_name.push_str(&uuid);
@@ -154,7 +154,7 @@ pub async fn add(mut multipart: Multipart) -> Result<String> {
     // 遍历sql列表
     for insert_sql in insert_sqls.iter() {
         // 执行插入数据sql
-        tx.execute_unprepared(&insert_sql).await?;
+        tx.execute_unprepared(insert_sql).await?;
     }
     // 读入任务数据后赋值该变量
     let total = csv_data.len();

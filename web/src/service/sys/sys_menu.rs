@@ -299,7 +299,7 @@ pub async fn search(data: SearchMenuDto) -> Result<PageResult<ResponseMenu>> {
 
 pub async fn role_menu_tree(role_id: String) -> Result<Vec<ResponseMenu>> {
     let db = get_db().await;
-    let result = SysMenu::find()
+    let result:Vec<ResponseMenu> = SysMenu::find()
         .join(JoinType::LeftJoin,
               SysRoleMenuRelation::SysMenu
                   .def().rev()
@@ -320,21 +320,21 @@ pub async fn role_menu_tree(role_id: String) -> Result<Vec<ResponseMenu>> {
     Ok(data)
 }
 
-async fn root_tree(nodes: &Vec<ResponseMenu>) -> Vec<ResponseMenu> {
+async fn root_tree(nodes: &[ResponseMenu]) -> Vec<ResponseMenu> {
     nodes
         .iter()
         .filter(|item| item.parent_id == SYSTEM_PARENT_MENU_ID)
-        .map(|item| item.clone())
+        .cloned()
         .collect()
 }
 
 #[async_recursion]
-async fn child_tree(mut roots: Vec<ResponseMenu>, nodes: &Vec<ResponseMenu>) -> Vec<ResponseMenu> {
+async fn child_tree(mut roots: Vec<ResponseMenu>, nodes: &[ResponseMenu]) -> Vec<ResponseMenu> {
     for root in roots.iter_mut() {
         let data: Vec<ResponseMenu> = nodes
             .iter()
             .filter(|item| item.parent_id == root.id)
-            .map(|item| item.clone())
+            .cloned()
             .collect();
         let data = child_tree(data.clone(), nodes).await;
         root.children = Some(data);

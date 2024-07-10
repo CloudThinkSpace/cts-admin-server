@@ -177,7 +177,7 @@ pub async fn search(data: SearchRoleDto) -> Result<PageResult<ResponseRole>> {
     // 查询角色数据
     let list = paginate.fetch_page(page_no - 1).await?;
 
-    let tenant_ids: Vec<String> = list.iter().filter(|item| item.tenant_id.is_some()).map(|item| item.tenant_id.clone().unwrap()).collect();
+    let tenant_ids: Vec<String> = list.iter().filter_map(|item| item.tenant_id.clone()).collect();
 
     let tenants = SysTenant::find()
         .filter(SysTenantColumn::Id.is_in(tenant_ids))

@@ -122,7 +122,7 @@ impl CtsSelect {
         hande_id(&id);
         Ok(Self(self.0.clone(), self.1.clone()))
     }
-
+    /// 查询数据，返回单条数据
     pub async fn one(&self, db: &DatabaseConnection) -> Result<Option<Value>> {
         match &self.1 {
             None => {
@@ -139,7 +139,7 @@ impl CtsSelect {
             }
         }
     }
-
+    /// 查询所有数据，根据查询条件进行过滤
     pub async fn all(&self, db: &DatabaseConnection) -> Result<Vec<Value>> {
         match &self.1 {
             None => {

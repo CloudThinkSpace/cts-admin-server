@@ -13,10 +13,10 @@ pub fn parse(form_str: &str) -> anyhow::Result<FormTemplate> {
 /// 处理表头函数
 /// 判断表头列表是否有公共字段，如果有重命名
 /// 添加公共字段
-pub fn handler_form_header(headers: &Vec<String>) -> Vec<String> {
+pub fn handler_form_header(headers: &[String]) -> Vec<String> {
     let mut result = Vec::new();
     for header in headers.iter() {
-        let field = if FormCommonField::contains(&header.as_str()) {
+        let field = if FormCommonField::contains(header.as_str()) {
             handler_common_field(header, 0)
         } else {
             header.to_string()
@@ -33,7 +33,7 @@ pub fn handler_form_header(headers: &Vec<String>) -> Vec<String> {
 }
 
 /// 从表头列表中找出对应位置列表
-pub fn filter_code_lon_lat(headers: &Vec<String>, fields: &Vec<String>) -> Vec<usize> {
+pub fn filter_code_lon_lat(headers: &[String], fields: &[String]) -> Vec<usize> {
     let mut result = Vec::new();
     for (index, header) in headers.iter().enumerate() {
         if fields.contains(header) {
@@ -47,7 +47,7 @@ pub fn filter_code_lon_lat(headers: &Vec<String>, fields: &Vec<String>) -> Vec<u
 /// 将String类型转换成DbType
 /// @param data 数据
 /// @param index_common，code，lon，lat 位置数组
-pub fn handler_form_data(data: &Vec<String>, index_common: &Vec<usize>) -> Vec<Box<dyn DbType>> {
+pub fn handler_form_data(data: &[String], index_common: &[usize]) -> Vec<Box<dyn DbType>> {
     let mut result: Vec<Box<dyn DbType>> = Vec::new();
     for datum in data.iter() {
         result.push(Box::new(datum.to_string()));
@@ -76,7 +76,7 @@ pub fn handler_form_data(data: &Vec<String>, index_common: &Vec<usize>) -> Vec<B
 /// 如果有相同字段，添加_index后缀，【index】自增长
 pub fn handler_common_field(name: &str, index: i32) -> String {
     let field_name = format!("{name}_{index}");
-    if FormCommonField::contains(&field_name.as_str()) {
+    if FormCommonField::contains(field_name.as_str()) {
         handler_common_field(name, index + 1)
     } else {
         field_name

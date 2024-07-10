@@ -45,7 +45,7 @@ pub async fn add(table_id: String, data: Value) -> Result<String> {
     let table_name = get_table_name(&table_id, IS_DATA);
     let mut  data_id = String::from("0");
     let _ = CtsSelect::table(&table_name).add(data,|id| {
-        data_id = id.clone()
+        data_id.clone_from(id)
     })?.execute(&db).await?;
 
     Ok(data_id)
