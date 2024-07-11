@@ -1,6 +1,8 @@
+use common::date_time_format;
+use common::date_time_format_option;
+use entity::sys_api::Model;
 use sea_orm::prelude::DateTime;
 use serde::{Deserialize, Serialize};
-use entity::sys_api::Model;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -12,10 +14,11 @@ pub struct ResponseApi {
     pub api_method: String,
     pub description: Option<String>,
     pub remark: Option<String>,
+    #[serde(with = "date_time_format")]
     pub created_at: DateTime,
+    #[serde(with = "date_time_format_option")]
     pub updated_at: Option<DateTime>,
 }
-
 
 impl From<Model> for ResponseApi {
     fn from(value: Model) -> Self {
@@ -32,3 +35,4 @@ impl From<Model> for ResponseApi {
         }
     }
 }
+

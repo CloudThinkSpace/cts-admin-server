@@ -1599,6 +1599,7 @@ dependencies = [
 name = "models"
 version = "0.1.0"
 dependencies = [
+ "common",
  "entity",
  "sea-orm 0.12.15",
  "serde",

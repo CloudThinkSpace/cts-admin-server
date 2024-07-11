@@ -6,4 +6,3 @@ async fn main() {
     log::init_log();
     server::start().await;
 }
-
