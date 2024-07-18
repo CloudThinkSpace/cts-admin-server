@@ -27,13 +27,20 @@ pub mod cst;
 /// 系统api router
 /// 该api包含授权和非授权
 pub fn api() -> Router {
+
+    let all_router = Router::new()
+    // 合并无需认证api
+    .merge(no_auth_api())
+    // 合并需要认证api
+    .merge(auth_api());
+
     Router::new()
-        // 合并无需认证api
-        .merge(no_auth_api())
-        // 合并需要认证api
-        .merge(auth_api())
-        .route("/", get(|| async { "Hello CloudThinkSpace!" }))
-        .fallback(handler_404)
+    // .nest("/api", all_router)
+    .merge(all_router)
+    .route("/", get(|| async { "Hello CloudThinkSpace!" }))
+    .fallback(handler_404)
+   
+       
 }
 
 /// 需要认证api
@@ -54,7 +61,7 @@ fn auth_api() -> Router {
         // 合并权限路由
         .merge(permission_route());
 
-    let cts_router = Router::new()
+    let cts_router: Router = Router::new()
         // 表单路由
         .merge(form_template_route())
         .merge(task_route())

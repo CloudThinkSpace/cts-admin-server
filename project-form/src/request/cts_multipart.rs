@@ -1,10 +1,11 @@
-use std::collections::BTreeMap;
 use async_trait::async_trait;
+use std::collections::BTreeMap;
 
+use crate::file_util::create_time_dir;
 use axum::body::Bytes;
-use axum::BoxError;
-use axum::extract::Multipart;
 use axum::extract::multipart::Field;
+use axum::extract::Multipart;
+use axum::BoxError;
 use futures_util::stream::Stream;
 use futures_util::TryStreamExt;
 use tokio::fs::File;
@@ -13,19 +14,22 @@ use tokio::io::BufWriter;
 use tokio_util::bytes::Buf;
 use tokio_util::io::StreamReader;
 use uuid::Uuid;
-use crate::file_util::create_time_dir;
 
 use crate::request::{CsvParse, CtsFile, FileParse};
 
 #[async_trait]
 impl FileParse for Multipart {
-    async fn parse(&mut self, path: &str) -> anyhow::Result<(BTreeMap<String, Bytes>, Vec<CtsFile>)> {
+    async fn parse(
+        &mut self,
+        path: &str,
+    ) -> anyhow::Result<(BTreeMap<String, Bytes>, Vec<CtsFile>)> {
         let mut file_paths = Vec::new();
         let mut result = BTreeMap::new();
         while let Some(field) = self.next_field().await.unwrap() {
             // 处理文件
             if let Some(filename) = field.file_name() {
-                let cts_file = stream_to_file(path, &filename.to_owned(), field).await?;
+                let file_path = filename.to_string();
+                let cts_file = stream_to_file(path, &file_path, field).await?;
                 file_paths.push(cts_file)
             } else {
                 let name = field.name().unwrap().to_string();
@@ -41,7 +45,9 @@ impl FileParse for Multipart {
 
 #[async_trait]
 impl CsvParse for Multipart {
-    async fn read_csv(&mut self) -> anyhow::Result<(BTreeMap<String, Bytes>, (Vec<String>, Vec<Vec<String>>))> {
+    async fn read_csv(
+        &mut self,
+    ) -> anyhow::Result<(BTreeMap<String, Bytes>, (Vec<String>, Vec<Vec<String>>))> {
         let mut csv_headers = Vec::new();
         let mut csv_data = Vec::new();
         let mut result = BTreeMap::new();
@@ -63,11 +69,14 @@ impl CsvParse for Multipart {
 
 async fn stream_to_file<S, E>(path: &str, filename: &str, stream: S) -> Result<CtsFile, io::Error>
 where
-    S: Stream<Item=Result<Bytes, E>>,
+    S: Stream<Item = Result<Bytes, E>>,
     E: Into<BoxError>,
 {
     if !path_is_valid(path) {
-        return Err(io::Error::new(io::ErrorKind::Other, "文件路径问题".to_string()));
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            "文件路径问题".to_string(),
+        ));
     }
 
     async {
@@ -75,9 +84,12 @@ where
         let body_reader = StreamReader::new(body_with_io_error);
         futures::pin_mut!(body_reader);
         // 分解
-        let files: Vec<&str> = filename.split(".").map(|item| item).collect();
+        let files: Vec<&str> = filename.split('.').collect();
         if files.len() != 2 {
-            return Err(io::Error::new(io::ErrorKind::Other, "上次文件错误，该文件没有后缀"));
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                "上次文件错误，该文件没有后缀",
+            ));
         }
         let ext = files[1];
         let new_filename = format!("{}.{}", Uuid::new_v4(), ext);
@@ -92,11 +104,10 @@ where
             filename: filename.to_string(),
         })
     }
-        .await
+    .await
 }
 
-async fn stream_to_vec(stream: Field<'_>) -> Result<(Vec<String>, Vec<Vec<String>>), io::Error>
-{
+async fn stream_to_vec(stream: Field<'_>) -> Result<(Vec<String>, Vec<Vec<String>>), io::Error> {
     let mut result_headers = Vec::new();
     let mut result_data = Vec::new();
     let body = stream.bytes().await.unwrap();
@@ -131,3 +142,4 @@ fn path_is_valid(path: &str) -> bool {
 
     components.count() == 1
 }
+

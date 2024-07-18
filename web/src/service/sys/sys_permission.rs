@@ -14,7 +14,6 @@ use entity::sys_role_menu::{
 };
 
 use models::dto::sys::request::sys_permission::{RoleApiDto, RoleMenuDto};
-use models::dto::sys::response::sys_api::ResponseApi;
 use models::dto::sys::response::sys_menu::ResponseMenu;
 use sea_orm::sea_query::{Expr, IntoCondition};
 use sea_orm::{
@@ -88,9 +87,9 @@ pub async fn set_api(apis_role: RoleApiDto) -> Result<String> {
     Ok("授权Api成功".to_string())
 }
 
-pub async fn search_api(role_id: String) -> Result<Vec<ResponseApi>> {
+pub async fn search_api(role_id: String) -> Result<Vec<String>> {
     let db = get_db().await;
-    let result: Vec<ResponseApi> = SysApi::find()
+    let result: Vec<String> = SysApi::find()
         .join(
             JoinType::LeftJoin,
             SysRoleApiRelation::SysApi
@@ -106,7 +105,7 @@ pub async fn search_api(role_id: String) -> Result<Vec<ResponseApi>> {
         .all(&db)
         .await?
         .into_iter()
-        .map(|model| model.into())
+        .map(|model| model.id)
         .collect();
     Ok(result)
 }

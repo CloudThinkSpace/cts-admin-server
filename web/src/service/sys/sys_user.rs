@@ -3,7 +3,9 @@ use std::collections::HashMap;
 use anyhow::{bail, Result};
 use chrono::Local;
 use sea_orm::ActiveValue::Set;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, NotSet, PaginatorTrait, QueryFilter};
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, EntityTrait, NotSet, PaginatorTrait, QueryFilter, QueryOrder,
+};
 use uuid::Uuid;
 
 use common::db::get_db;
@@ -138,6 +140,7 @@ pub async fn update(id: String, update_user: UpdateUserDto) -> Result<String> {
     }
     // 查询用户信息
     let result = SysUser::find_by_id(id.clone()).one(&db).await?;
+    // todo 角色是否存在
     // 更新用户名
     if let Some(current_user) = result {
         let mut current_user: ActiveModel = current_user.into();
@@ -216,7 +219,7 @@ pub async fn update_status(id: String, status: i32) -> Result<String> {
 
 /// 查询用户列表
 /// @param data 类型SearchUserDto
-pub async fn search(data: SearchUserDto) -> Result<PageResult<ResponseUser>> {
+pub async fn search(user: ResponseUser, data: SearchUserDto) -> Result<PageResult<ResponseUser>> {
     let db = get_db().await;
     let mut select = SysUser::find();
     // 判断用户名是否为空
@@ -237,12 +240,18 @@ pub async fn search(data: SearchUserDto) -> Result<PageResult<ResponseUser>> {
     }
     // 判断租户是否为空
     if data.tenant_id.is_some() {
-        select = select.filter(SysUserColumn::TenantId.eq(data.tenant_id.unwrap()))
+        let tenant_id = user.tenant;
+        match tenant_id {
+            Some(tenant) => select = select.filter(SysUserColumn::TenantId.eq(tenant.id)),
+            None => select = select.filter(SysUserColumn::TenantId.eq(data.tenant_id.unwrap())),
+        }
+    } else if let Some(tenant) = user.tenant {
+        select = select.filter(SysUserColumn::TenantId.eq(tenant.id))
     }
     // 排除已删除用户
     select = select.filter(SysUserColumn::DeletedAt.is_null());
     // 排序 todo
-
+    select = select.order_by_desc(SysUserColumn::CreatedAt);
     // 获取事务对象
     // 查询数据数量
     let total = select.clone().count(&db).await?;

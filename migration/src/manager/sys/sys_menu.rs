@@ -64,15 +64,40 @@ impl TableOperation for SysMenu {
                     .col(ColumnDef::new(SysMenu::ParentId).string().not_null())
                     .col(ColumnDef::new(SysMenu::Sort).big_integer().not_null())
                     .col(ColumnDef::new(SysMenu::Path).string().not_null())
-                    .col(ColumnDef::new(SysMenu::Hidden).integer().not_null().default(0))
+                    .col(
+                        ColumnDef::new(SysMenu::Hidden)
+                            .boolean()
+                            .not_null()
+                            .default(false),
+                    )
                     .col(ColumnDef::new(SysMenu::Component).string().not_null())
                     .col(ColumnDef::new(SysMenu::ActiveName).string())
-                    .col(ColumnDef::new(SysMenu::KeepAlive).integer().not_null().default(0))
+                    .col(
+                        ColumnDef::new(SysMenu::KeepAlive)
+                            .boolean()
+                            .not_null()
+                            .default(false),
+                    )
                     .col(ColumnDef::new(SysMenu::Title).string().not_null())
                     .col(ColumnDef::new(SysMenu::Icon).string())
-                    .col(ColumnDef::new(SysMenu::DefaultMenu).integer().not_null().default(0))
-                    .col(ColumnDef::new(SysMenu::MenuLevel).big_integer().not_null().default(0))
-                    .col(ColumnDef::new(SysMenu::CloseTab).integer().not_null().default(0))
+                    .col(
+                        ColumnDef::new(SysMenu::DefaultMenu)
+                            .boolean()
+                            .not_null()
+                            .default(false),
+                    )
+                    .col(
+                        ColumnDef::new(SysMenu::MenuLevel)
+                            .big_integer()
+                            .not_null()
+                            .default(0),
+                    )
+                    .col(
+                        ColumnDef::new(SysMenu::CloseTab)
+                            .boolean()
+                            .not_null()
+                            .default(false),
+                    )
                     .col(ColumnDef::new(SysMenu::Description).string())
                     .col(ColumnDef::new(SysMenu::Remark).string())
                     .col(ColumnDef::new(SysMenu::CreatedAt).timestamp().not_null())
@@ -89,7 +114,8 @@ impl TableOperation for SysMenu {
 
     async fn drop_table(&self, manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(SysMenu::Table).if_exists().to_owned()).await
+            .drop_table(Table::drop().table(SysMenu::Table).if_exists().to_owned())
+            .await
     }
 
     async fn insert_data(&self, manager: &SchemaManager<'_>) -> Result<(), DbErr> {
@@ -102,14 +128,13 @@ impl TableOperation for SysMenu {
                 manager.get_database_backend(),
                 "
         INSERT INTO sys_menu
-        (id, name, parent_id, sort, path,Component, Title, Default_Menu,Created_At)
+        (id, name, parent_id, sort, path, Component, Title, Default_Menu,Created_At)
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
         ",
                 item,
             );
             db.execute(stmt_user).await?;
         }
-
 
         Ok(())
     }
@@ -120,89 +145,103 @@ fn create_data() -> Vec<[Value; 9]> {
     // 生成时间戳
     let now = Local::now().naive_local();
     // 用户菜单数据
+    let data_home: [Value; 9] = [
+        "0".into(),
+        "home".into(),
+        "".into(),
+        0.into(),
+        "dashboard".into(),
+        "/demo/table/FormTable.vue".into(),
+        "首页".into(),
+        true.into(),
+        now.into(),
+    ];
+
+    // 用户菜单数据
     let data_user: [Value; 9] = [
         "1".into(),
-        "用户管理".into(),
+        "user".into(),
         "".into(),
         1.into(),
-        "user/manager".into(),
-        "view/user.vue".into(),
+        "user/index".into(),
+        "/demo/table/FormTable.vue".into(),
         "用户管理".into(),
-        1.into(),
-        now.into()
+        true.into(),
+        now.into(),
     ];
     // 角色菜单数据
     let data_role: [Value; 9] = [
         "2".into(),
-        "角色管理".into(),
+        "role".into(),
         "".into(),
         2.into(),
-        "role/manager".into(),
-        "view/role.vue".into(),
+        "role/index".into(),
+        "/demo/table/FormTable.vue".into(),
         "角色管理".into(),
-        1.into(),
-        now.into()
+        true.into(),
+        now.into(),
     ];
     // 菜单数据
     let data_menu: [Value; 9] = [
         "3".into(),
-        "菜单管理".into(),
+        "menu".into(),
         "".into(),
         3.into(),
         "menu/manager".into(),
-        "view/menu.vue".into(),
+        "/demo/table/FormTable.vue".into(),
         "菜单管理".into(),
-        1.into(),
-        now.into()
+        true.into(),
+        now.into(),
     ];
     // Api数据
     let data_api: [Value; 9] = [
         "4".into(),
-        "Api管理".into(),
+        "api".into(),
         "".into(),
         4.into(),
-        "menu/manager".into(),
-        "view/menu.vue".into(),
+        "menu/index".into(),
+        "/demo/table/FormTable.vue".into(),
         "Api管理".into(),
-        1.into(),
-        now.into()
+        true.into(),
+        now.into(),
     ];
     // 租户数据
     let data_tenant: [Value; 9] = [
         "5".into(),
-        "租户管理".into(),
+        "tenant".into(),
         "".into(),
         5.into(),
-        "tenant/manager".into(),
-        "view/tenant.vue".into(),
+        "tenant/index".into(),
+        "/demo/table/FormTable.vue".into(),
         "租户管理".into(),
-        1.into(),
-        now.into()
+        true.into(),
+        now.into(),
     ];
     // 采集数据
     let data_collect: [Value; 9] = [
         "6".into(),
-        "采集管理".into(),
+        "collection".into(),
         "".into(),
         6.into(),
-        "collect/manager".into(),
-        "view/collect.vue".into(),
+        "collect/index".into(),
+        "/demo/table/FormTable.vue".into(),
         "采集管理".into(),
-        0.into(),
-        now.into()
+        false.into(),
+        now.into(),
     ];
     // 项目数据
     let data_project: [Value; 9] = [
         "7".into(),
-        "项目管理".into(),
+        "project".into(),
         "6".into(),
         7.into(),
         "project/manager".into(),
-        "view/project.vue".into(),
+        "/demo/table/FormTable.vue".into(),
         "项目管理".into(),
-        0.into(),
-        now.into()
+        false.into(),
+        now.into(),
     ];
+    result.push(data_home);
     result.push(data_user);
     result.push(data_role);
     result.push(data_menu);
@@ -213,3 +252,4 @@ fn create_data() -> Vec<[Value; 9]> {
 
     result
 }
+

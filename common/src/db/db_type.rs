@@ -1,12 +1,12 @@
-use std::fmt::{Debug, Display, Formatter};
 use chrono::NaiveDateTime;
+use std::fmt::{Debug, Display, Formatter};
 
 #[derive(Debug)]
 pub struct Null;
 
 impl Display for Null {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", "NULL")
+        write!(f, "NULL")
     }
 }
 
@@ -57,9 +57,9 @@ impl DbType for NaiveDateTime {
     }
 }
 
-impl DbType for Null
-{
+impl DbType for Null {
     fn display(&self) -> String {
         "NUlL".to_string()
     }
 }
+

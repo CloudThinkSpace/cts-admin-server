@@ -1,6 +1,6 @@
+use crate::dto::{Order, Page};
 use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
-use crate::dto::{Order, Page};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -9,15 +9,15 @@ pub struct UpdateMenuDto {
     pub parent_id: Option<String>,
     pub sort: Option<i64>,
     pub path: Option<String>,
-    pub hidden: Option<i32>,
+    pub hidden: Option<bool>,
     pub component: Option<String>,
     pub active_name: Option<String>,
-    pub keep_alive: Option<i32>,
+    pub keep_alive: Option<bool>,
     pub title: Option<String>,
     pub icon: Option<String>,
-    pub default_menu: Option<i32>,
+    pub default_menu: Option<bool>,
     pub menu_level: Option<i64>,
-    pub close_tab: Option<i32>,
+    pub close_tab: Option<bool>,
     pub description: Option<String>,
     pub remark: Option<String>,
 }
@@ -29,15 +29,15 @@ pub struct AddMenuDto {
     pub parent_id: String,
     pub sort: i64,
     pub path: String,
-    pub hidden: i32,
+    pub hidden: bool,
     pub component: String,
     pub active_name: Option<String>,
-    pub keep_alive: i32,
+    pub keep_alive: bool,
     pub title: String,
     pub icon: Option<String>,
-    pub default_menu: i32,
+    pub default_menu: bool,
     pub menu_level: i64,
-    pub close_tab: i32,
+    pub close_tab: bool,
     pub description: Option<String>,
     pub remark: Option<String>,
 }
@@ -47,17 +47,18 @@ pub struct AddMenuDto {
 pub struct SearchMenuDto {
     pub name: Option<String>,
     pub path: Option<String>,
-    pub hidden: Option<i32>,
+    pub hidden: Option<bool>,
     pub component: Option<String>,
     pub active_name: Option<String>,
-    pub keep_alive: Option<i32>,
+    pub keep_alive: Option<bool>,
     pub title: Option<String>,
-    pub default_menu: Option<i32>,
+    pub default_menu: Option<bool>,
     pub menu_level: Option<i64>,
-    pub close_tab: Option<i32>,
+    pub close_tab: Option<bool>,
     pub description: Option<String>,
     pub remark: Option<String>,
     pub page: Option<Page>,
     // 排序
     pub orders: Option<Vec<Order>>,
 }
+
