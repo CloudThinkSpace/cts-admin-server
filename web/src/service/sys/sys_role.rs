@@ -14,7 +14,7 @@ use models::dto::sys::request::sys_role::{AddRoleDto, SearchRoleDto, UpdateRoleD
 use models::dto::sys::response::sys_role::ResponseRole;
 use models::dto::sys::response::sys_tenant::ResponseTenant;
 use models::dto::{handler_page, PageResult};
-
+use sea_orm::QueryOrder;
 use crate::service::has_tenant;
 use crate::service::sys::ADMIN_ID;
 
@@ -212,6 +212,8 @@ pub async fn search(user: ResponseUser, data: SearchRoleDto) -> Result<PageResul
     }
     // 排除已删除角色
     select = select.filter(SysRoleColumn::DeletedAt.is_null());
+    // 排序 todo
+    select = select.order_by_desc(SysRoleColumn::CreatedAt);
     // 查询数据数量
     let total = select.clone().count(&db).await?;
     let (page_no, page_size) = handler_page(data.page);

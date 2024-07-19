@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use axum::extract::{Path, Query};
 use axum::Json;
 use axum::response::IntoResponse;
-use models::dto::sys::request::sys_tenant::{AddTenantDto, SearchTenantDto, UpdateTenantDto};
+use models::dto::sys::request::sys_tenant::{AddTenantDto, SearchTenantDto, UpdateTenantDto, UpdateTenantStatusDto};
 use crate::handler::{handle_force, handle_result};
 use crate::service::sys::sys_tenant;
 
@@ -20,6 +20,18 @@ pub async fn add(Json(data): Json<AddTenantDto>) -> impl IntoResponse {
 /// return IntoResponse
 pub async fn update(Path(id): Path<String>, Json(data): Json<UpdateTenantDto>) -> impl IntoResponse {
     let result = sys_tenant::update(id, data).await;
+    handle_result(result)
+}
+
+/// 更新租户状态函数
+/// @param id 类型String
+/// @param data 类型 UpdateTenantStatusDto
+/// return IntoResponse
+pub async fn update_status(
+    Path(id): Path<String>,
+    Json(data): Json<UpdateTenantStatusDto>,
+) -> impl IntoResponse {
+    let result = sys_tenant::update_status(id, data.status).await;
     handle_result(result)
 }
 

@@ -11,6 +11,7 @@ pub fn domain_route() -> Router {
         .route("/update/:id", post(sys_tenant::update))
         .route("/delete/:id", get(sys_tenant::delete))
         .route("/query/:id", get(sys_tenant::query))
+        .route("/status/:id", post(sys_tenant::update_status))
         .route("/search", post(sys_tenant::search));
 
     Router::new()

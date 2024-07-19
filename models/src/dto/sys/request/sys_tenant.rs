@@ -34,3 +34,10 @@ pub struct SearchTenantDto {
     // 排序
     pub orders: Option<Vec<Order>>,
 }
+
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateTenantStatusDto {
+    pub status: i32,
+}

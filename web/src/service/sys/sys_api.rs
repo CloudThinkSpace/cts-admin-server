@@ -151,15 +151,15 @@ pub async fn search(data: SearchApiDto) -> Result<PageResult<ResponseApi>> {
     }
     // 判断api path是否为空
     if data.api_path.is_some() {
-        select = select.filter(SysApiColumn::ApiPath.eq(data.api_path.unwrap()))
+        select = select.filter(SysApiColumn::ApiPath.contains(data.api_path.unwrap()))
     }
     // 判断api method是否为空
     if data.api_method.is_some() {
-        select = select.filter(SysApiColumn::ApiMethod.eq(data.api_method.unwrap()))
+        select = select.filter(SysApiColumn::ApiMethod.contains(data.api_method.unwrap()))
     }
     // 判断api group是否为空
     if data.api_group.is_some() {
-        select = select.filter(SysApiColumn::ApiGroup.eq(data.api_group.unwrap()))
+        select = select.filter(SysApiColumn::ApiGroup.contains(data.api_group.unwrap()))
     }
     // 排除已删除角色
     select = select.filter(SysApiColumn::DeletedAt.is_null());

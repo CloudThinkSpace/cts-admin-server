@@ -3,7 +3,7 @@ use chrono::Local;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, NotSet, PaginatorTrait, QueryFilter};
 use sea_orm::ActiveValue::Set;
 use uuid::Uuid;
-
+use sea_orm::QueryOrder;
 use common::db::get_db;
 use entity::sys_tenant::{ActiveModel, Column as SysTenantColumn, Entity as SysTenant};
 use models::dto::{handler_page, PageResult};
@@ -127,6 +127,37 @@ pub async fn update(id: String, update_tenant: UpdateTenantDto) -> Result<String
     }
 }
 
+/// 更新状态
+/// @param id tenant编号
+/// @param status 状态，值为【0或1】，其他值无效
+pub async fn update_status(id: String, status: i32) -> Result<String> {
+    let db: sea_orm::DatabaseConnection = get_db().await;
+    // 判断id是否存在
+    if id.is_empty() {
+        bail!("租户编号不能为空".to_string())
+    }
+
+    // 查询租户信息
+    let result = SysTenant::find_by_id(id).one(&db).await?;
+    // 更新用户名
+    if let Some(current_data) = result {
+        let mut current_data: ActiveModel = current_data.into();
+        match status {
+            0 | 1 => current_data.enabled = Set(status),
+            _ => {
+                bail!("租户状态值不合法，只能是【0或1】".to_string())
+            }
+        };
+        // 更新时间
+        current_data.updated_at = Set(Some(Local::now().naive_local()));
+        // 更新状态
+        let ok = current_data.update(&db).await?;
+        Ok(ok.id)
+    } else {
+        bail!("租户数据不存在，无法更新".to_string())
+    }
+}
+
 /// 查询租户列表
 /// @param data 类型SearchTenantDto
 pub async fn search(data: SearchTenantDto) -> Result<PageResult<ResponseTenant>> {
@@ -154,6 +185,8 @@ pub async fn search(data: SearchTenantDto) -> Result<PageResult<ResponseTenant>>
     }
     // 排除已删除角色
     select = select.filter(SysTenantColumn::DeletedAt.is_null());
+    // 排序 todo
+    select = select.order_by_desc(SysTenantColumn::CreatedAt);
     // 查询数据数量
     let total = select.clone().count(&db).await?;
     let (page_no, page_size) = handler_page(data.page);
