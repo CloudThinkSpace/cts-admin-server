@@ -11,6 +11,7 @@ pub fn role_route() -> Router {
         .route("/update/:id", post(sys_role::update))
         .route("/delete/:id", get(sys_role::delete))
         .route("/query/:id", get(sys_role::query))
+        .route("/status/:id", post(sys_role::update_status))
         .route("/search", post(sys_role::search));
 
     Router::new()

@@ -230,6 +230,10 @@ pub async fn search(user: ResponseUser, data: SearchUserDto) -> Result<PageResul
     if data.nickname.is_some() {
         select = select.filter(SysUserColumn::Nickname.contains(data.nickname.unwrap()));
     }
+    // 判断状态是否为空
+    if data.status.is_some() {
+        select = select.filter(SysUserColumn::Status.eq(data.status.unwrap()));
+    }
     // 判断备注是否为空
     if data.remark.is_some() {
         select = select.filter(SysUserColumn::Remark.contains(data.remark.unwrap()));

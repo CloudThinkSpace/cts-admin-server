@@ -59,7 +59,7 @@ pub async fn get_user_info(Extension(user): Extension<ResponseUser>) -> impl Int
 
 /// 更新用户状态函数
 /// @param id 类型String
-/// @param data 类型UpdateUserStatusDto
+/// @param data 类型 UpdateUserStatusDto
 /// return IntoResponse
 pub async fn update_status(
     Path(id): Path<String>,

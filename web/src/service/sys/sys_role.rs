@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::{bail, Result};
 use chrono::Local;
+use models::dto::sys::response::sys_user::ResponseUser;
 use sea_orm::ActiveValue::Set;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, NotSet, PaginatorTrait, QueryFilter};
 use uuid::Uuid;
@@ -143,14 +144,53 @@ pub async fn update(id: String, update_role: UpdateRoleDto) -> Result<String> {
     }
 }
 
+/// 更新状态
+/// @param id role编号
+/// @param status 状态，值为【0或1】，其他值无效
+pub async fn update_status(id: String, status: i32) -> Result<String> {
+    let db: sea_orm::DatabaseConnection = get_db().await;
+    // 判断id是否存在
+    if id.is_empty() {
+        bail!("角色编号不能为空".to_string())
+    }
+    // 判断是否为超级管理员
+    if ADMIN_ID == id {
+        bail!("超级管理员无法变更状态".to_string())
+    }
+    // 查询角色信息
+    let result = SysRole::find_by_id(id).one(&db).await?;
+    // 更新用户名
+    if let Some(current_data) = result {
+        let mut current_data: ActiveModel = current_data.into();
+        match status {
+            0 | 1 => current_data.enabled = Set(status),
+            _ => {
+                bail!("角色状态值不合法，只能是【0或1】".to_string())
+            }
+        };
+        // 更新时间
+        current_data.updated_at = Set(Some(Local::now().naive_local()));
+        // 更新状态
+        let ok = current_data.update(&db).await?;
+        Ok(ok.id)
+    } else {
+        bail!("角色数据不存在，无法更新".to_string())
+    }
+}
+
+
 /// 查询角色列表
 /// @param data 类型SearchRoleDto
-pub async fn search(data: SearchRoleDto) -> Result<PageResult<ResponseRole>> {
+pub async fn search(user: ResponseUser, data: SearchRoleDto) -> Result<PageResult<ResponseRole>> {
     let db = get_db().await;
     let mut select = SysRole::find();
     // 判断名称是否为空
     if data.name.is_some() {
         select = select.filter(SysRoleColumn::Name.contains(data.name.unwrap()))
+    }
+    // 判断状态是否为空
+    if data.enabled.is_some() {
+        select = select.filter(SysRoleColumn::Enabled.eq(data.enabled.unwrap()));
     }
     // 判断备注是否为空
     if data.remark.is_some() {
@@ -162,7 +202,13 @@ pub async fn search(data: SearchRoleDto) -> Result<PageResult<ResponseRole>> {
     }
     // 判断租户是否为空
     if data.tenant_id.is_some() {
-        select = select.filter(SysRoleColumn::TenantId.eq(data.tenant_id.unwrap()))
+        let tenant_id = user.tenant;
+        match tenant_id {
+            Some(tenant) => select = select.filter(SysRoleColumn::TenantId.eq(tenant.id)),
+            None => select = select.filter(SysRoleColumn::TenantId.eq(data.tenant_id.unwrap())),
+        }
+    } else if let Some(tenant) = user.tenant {
+        select = select.filter(SysRoleColumn::TenantId.eq(tenant.id))
     }
     // 排除已删除角色
     select = select.filter(SysRoleColumn::DeletedAt.is_null());
@@ -190,17 +236,18 @@ pub async fn search(data: SearchRoleDto) -> Result<PageResult<ResponseRole>> {
         .map(|item| (item.id.clone(), item.clone().into()))
         .collect::<HashMap<String, ResponseTenant>>();
 
-    let mut result = Vec::new();
+    let mut result_list = Vec::new();
     // 重组数据
     for role in list.into_iter() {
+        let tenant_id = role.tenant_id.clone();
         let mut response_role: ResponseRole = role.into();
-        let tenant = tenants.get(&response_role.id);
-        if tenant.is_some() {
-            response_role.tenant = Some(tenant.unwrap().clone())
+        if let Some(id) = tenant_id {
+            let tenant = tenants.get(&id).and_then(|item|Some(item.clone()));
+            response_role.tenant = tenant;
         }
-
-        result.push(response_role)
+        
+        result_list.push(response_role);
     }
-    let result = PageResult::new(result, total, pages, page_no);
+    let result = PageResult::new(result_list, total, pages, page_no);
     Ok(result)
 }
