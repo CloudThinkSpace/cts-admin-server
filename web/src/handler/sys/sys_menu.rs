@@ -55,3 +55,9 @@ pub async fn search(Json(data): Json<SearchMenuDto>) -> impl IntoResponse {
     handle_result(result)
 }
 
+/// 查询菜单树函数
+/// return IntoResponse
+pub async fn get_menu_tree() -> impl IntoResponse {
+    let result = sys_menu::get_menu_tree().await;
+    handle_result(result)
+}

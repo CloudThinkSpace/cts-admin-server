@@ -35,8 +35,6 @@ pub struct AddMenuDto {
     pub keep_alive: bool,
     pub title: String,
     pub icon: Option<String>,
-    pub default_menu: bool,
-    pub menu_level: i64,
     pub close_tab: bool,
     pub description: Option<String>,
     pub remark: Option<String>,
@@ -61,4 +59,3 @@ pub struct SearchMenuDto {
     // 排序
     pub orders: Option<Vec<Order>>,
 }
-

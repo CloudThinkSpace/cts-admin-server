@@ -4,6 +4,8 @@ use entity::sys_menu::Model;
 use sea_orm::prelude::DateTime;
 use serde::{Deserialize, Serialize};
 
+const SYSTEM_PARENT_MENU_ID: &str = "";
+
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Meta {
@@ -51,6 +53,27 @@ pub struct ResponseMenu {
     #[serde(with = "date_time_format_option")]
     pub updated_at: Option<DateTime>,
     pub children: Option<Vec<ResponseMenu>>,
+}
+
+pub fn root_tree(nodes: &[ResponseMenu]) -> Vec<ResponseMenu> {
+    nodes
+        .iter()
+        .filter(|item| item.parent_id == SYSTEM_PARENT_MENU_ID)
+        .cloned()
+        .collect()
+}
+
+pub fn child_tree(mut roots: Vec<ResponseMenu>, nodes: &[ResponseMenu]) -> Vec<ResponseMenu> {
+    for root in roots.iter_mut() {
+        let data: Vec<ResponseMenu> = nodes
+            .iter()
+            .filter(|item| item.parent_id == root.id)
+            .cloned()
+            .collect();
+        let data = child_tree(data.clone(), nodes);
+        root.children = Some(data);
+    }
+    roots
 }
 
 impl From<Model> for ResponseMenu {

@@ -128,7 +128,7 @@ impl TableOperation for SysMenu {
                 manager.get_database_backend(),
                 "
         INSERT INTO sys_menu
-        (id, name, parent_id, sort, path, Component, Title, Default_Menu,Created_At)
+        (id, name, icon, parent_id, sort, path, Component, Title, Default_Menu,Created_At)
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
         ",
                 item,
@@ -140,14 +140,15 @@ impl TableOperation for SysMenu {
     }
 }
 
-fn create_data() -> Vec<[Value; 9]> {
+fn create_data() -> Vec<[Value; 10]> {
     let mut result = Vec::new();
     // 生成时间戳
     let now = Local::now().naive_local();
     // 首页菜单数据
-    let data_home: [Value; 9] = [
+    let data_home: [Value; 10] = [
         "0".into(),
         "home".into(),
+        "ic:round-house".into(),
         "".into(),
         0.into(),
         "/dashboard".into(),
@@ -158,9 +159,10 @@ fn create_data() -> Vec<[Value; 9]> {
     ];
 
     // 用户菜单数据
-    let data_user: [Value; 9] = [
+    let data_user: [Value; 10] = [
         "1".into(),
         "user".into(),
+        "ic:baseline-supervisor-account".into(),
         "".into(),
         1.into(),
         "/user/index".into(),
@@ -170,9 +172,10 @@ fn create_data() -> Vec<[Value; 9]> {
         now.into(),
     ];
     // 角色菜单数据
-    let data_role: [Value; 9] = [
+    let data_role: [Value; 10] = [
         "2".into(),
         "role".into(),
+        "ic:round-join-left".into(),
         "".into(),
         2.into(),
         "/role/index".into(),
@@ -182,9 +185,10 @@ fn create_data() -> Vec<[Value; 9]> {
         now.into(),
     ];
     // 菜单数据
-    let data_menu: [Value; 9] = [
+    let data_menu: [Value; 10] = [
         "3".into(),
         "menu".into(),
+        "ic:round-view-list".into(),
         "".into(),
         3.into(),
         "/menu/index".into(),
@@ -194,9 +198,10 @@ fn create_data() -> Vec<[Value; 9]> {
         now.into(),
     ];
     // Api数据
-    let data_api: [Value; 9] = [
+    let data_api: [Value; 10] = [
         "4".into(),
         "api".into(),
+        "ic:sharp-playlist-add-check-circle".into(),
         "".into(),
         4.into(),
         "/api/index".into(),
@@ -206,9 +211,10 @@ fn create_data() -> Vec<[Value; 9]> {
         now.into(),
     ];
     // 租户数据
-    let data_tenant: [Value; 9] = [
+    let data_tenant: [Value; 10] = [
         "5".into(),
         "tenant".into(),
+        "ic:baseline-groups".into(),
         "".into(),
         5.into(),
         "/tenant/index".into(),
@@ -218,9 +224,10 @@ fn create_data() -> Vec<[Value; 9]> {
         now.into(),
     ];
     // 采集数据
-    let data_collect: [Value; 9] = [
+    let data_collect: [Value; 10] = [
         "6".into(),
         "collection".into(),
+        "ic:baseline-api".into(),
         "".into(),
         6.into(),
         "collect/index".into(),
@@ -230,9 +237,10 @@ fn create_data() -> Vec<[Value; 9]> {
         now.into(),
     ];
     // 项目数据
-    let data_project: [Value; 9] = [
+    let data_project: [Value; 10] = [
         "7".into(),
         "project".into(),
+        "ic:baseline-article".into(),
         "6".into(),
         7.into(),
         "project/manager".into(),
@@ -252,4 +260,3 @@ fn create_data() -> Vec<[Value; 9]> {
 
     result
 }
-

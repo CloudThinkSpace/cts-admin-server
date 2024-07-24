@@ -1,15 +1,16 @@
 use anyhow::{bail, Result};
 use chrono::Local;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, NotSet, PaginatorTrait, QueryFilter, QueryOrder, TransactionTrait};
 use sea_orm::ActiveValue::Set;
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, EntityTrait, NotSet, QueryFilter, QueryOrder, TransactionTrait,
+};
 use uuid::Uuid;
 
 use common::db::get_db;
 use common::error::CtsError;
 use entity::sys_menu::{ActiveModel, Column as SysMenuColumn, Entity as SysMenu};
-use models::dto::{handler_page, PageResult};
 use models::dto::sys::request::sys_menu::{AddMenuDto, SearchMenuDto, UpdateMenuDto};
-use models::dto::sys::response::sys_menu::ResponseMenu;
+use models::dto::sys::response::sys_menu::{child_tree, root_tree, ResponseMenu};
 
 use crate::service::sys::SYSTEM_MENU;
 
@@ -20,14 +21,13 @@ pub async fn get_by_id(id: String) -> Result<Option<ResponseMenu>> {
     let result = SysMenu::find_by_id(id)
         // 保障删除字段为空
         .filter(SysMenuColumn::DeletedAt.is_null())
-        .one(&db).await?;
+        .one(&db)
+        .await?;
     match result {
         None => {
             bail!("菜单不存在")
         }
-        Some(data) => {
-            Ok(Some(data.into()))
-        }
+        Some(data) => Ok(Some(data.into())),
     }
 }
 
@@ -36,8 +36,7 @@ pub async fn get_by_id(id: String) -> Result<Option<ResponseMenu>> {
 pub async fn delete_by_id(id: String, force: bool) -> Result<String> {
     let db = get_db().await;
     // 查询菜单信息
-    let result = SysMenu::find_by_id(id.clone())
-        .one(&db).await?;
+    let result = SysMenu::find_by_id(id.clone()).one(&db).await?;
     if let Some(data) = result {
         // 查看菜单是否为系统菜单
         if SYSTEM_MENU == data.default_menu {
@@ -47,8 +46,7 @@ pub async fn delete_by_id(id: String, force: bool) -> Result<String> {
             match force {
                 true => {
                     // 删除菜单
-                    let delete_result = SysMenu::delete_by_id(id)
-                        .exec(&db).await?;
+                    let delete_result = SysMenu::delete_by_id(id).exec(&db).await?;
                     Ok(format!("{}", delete_result.rows_affected))
                 }
                 false => {
@@ -89,7 +87,7 @@ pub async fn add(data: AddMenuDto) -> Result<String> {
         icon: Set(data.icon),
         // 添加菜单为普通菜单0，系统菜单为1
         default_menu: Default::default(),
-        menu_level: Set(data.menu_level),
+        menu_level: Set(0),
         remark: Set(data.remark),
         description: Set(data.description),
         created_at: Set(Local::now().naive_local()),
@@ -100,16 +98,17 @@ pub async fn add(data: AddMenuDto) -> Result<String> {
     // 查询sort位置以及以后的数据
     let list = SysMenu::find()
         .filter(SysMenuColumn::Sort.gte(data.sort))
-        .all(&db).await?;
+        .all(&db)
+        .await?;
     // 获取事务对象
     let tx = db.begin().await?;
     // sort +1
     for item in list.into_iter() {
         let mut data: ActiveModel = item.into();
         data.sort = Set(data.sort.unwrap() + 1);
-        data.update(&tx).await.map_err(|err| {
-            CtsError::Custom(err.to_string())
-        })?;
+        data.update(&tx)
+            .await
+            .map_err(|err| CtsError::Custom(err.to_string()))?;
     }
     // 插入新菜单
     let add_data = current.insert(&tx).await?;
@@ -118,7 +117,6 @@ pub async fn add(data: AddMenuDto) -> Result<String> {
 
     Ok(add_data.id)
 }
-
 
 /// 更新菜单信息
 /// @param update_role 待更新的菜单对象
@@ -199,10 +197,12 @@ pub async fn update(id: String, update_menu: UpdateMenuDto) -> Result<String> {
             // 查询sort位置以及以后的数据
             let mut select = SysMenu::find();
             if sort > new_sort {
-                select = select.filter(SysMenuColumn::Sort.gte(new_sort))
+                select = select
+                    .filter(SysMenuColumn::Sort.gte(new_sort))
                     .filter(SysMenuColumn::Sort.lte(sort));
             } else {
-                select = select.filter(SysMenuColumn::Sort.gte(sort))
+                select = select
+                    .filter(SysMenuColumn::Sort.gte(sort))
                     .filter(SysMenuColumn::Sort.lte(new_sort));
             }
 
@@ -225,9 +225,9 @@ pub async fn update(id: String, update_menu: UpdateMenuDto) -> Result<String> {
     }
 }
 
-/// 查询角色列表
-/// @param data 类型SearchRoleDto
-pub async fn search(data: SearchMenuDto) -> Result<PageResult<ResponseMenu>> {
+/// 查询菜单列表
+/// @param data 类型 SearchMenuDto
+pub async fn search(data: SearchMenuDto) -> Result<Vec<ResponseMenu>> {
     let db = get_db().await;
     let mut select = SysMenu::find();
     // 判断名称是否为空
@@ -277,19 +277,31 @@ pub async fn search(data: SearchMenuDto) -> Result<PageResult<ResponseMenu>> {
     // 排除已删除角色
     select = select.filter(SysMenuColumn::DeletedAt.is_null());
     select = select.order_by_asc(SysMenuColumn::Sort);
-    // 查询数据数量
-    let total = select.clone().count(&db).await?;
-    let (page_no, page_size) = handler_page(data.page);
-    // 分页对象
-    let paginate = select
-        .paginate(&db, page_size);
-    // 页数
-    let pages = paginate.num_pages().await?;
 
-    // 查询角色数据
-    let list = paginate.fetch_page(page_no - 1).await?.into_iter().map(|data| data.into()).collect();
+    let result: Vec<ResponseMenu> = select
+        .all(&db)
+        .await?
+        .into_iter()
+        .map(|model| model.into())
+        .collect();
 
-    let result = PageResult::new(list, total, pages, page_no);
+    let root_nodes = root_tree(&result);
+    let data = child_tree(root_nodes, &result);
+    Ok(data)
+}
 
-    Ok(result)
+/// 查询菜单树
+pub async fn get_menu_tree() -> Result<Vec<ResponseMenu>> {
+    let db = get_db().await;
+    let result: Vec<ResponseMenu> = SysMenu::find()
+        .order_by_asc(SysMenuColumn::Sort)
+        .all(&db)
+        .await?
+        .into_iter()
+        .map(|model| model.into())
+        .collect();
+
+    let root_nodes = root_tree(&result);
+    let data = child_tree(root_nodes, &result);
+    Ok(data)
 }

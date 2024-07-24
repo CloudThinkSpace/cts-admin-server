@@ -7,4 +7,4 @@ pub mod sys_user;
 
 const ADMIN_ID: &str = "1";
 const SYSTEM_MENU: bool = true;
-const SYSTEM_PARENT_MENU_ID: &str = "";
+

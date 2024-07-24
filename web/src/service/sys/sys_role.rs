@@ -7,6 +7,8 @@ use sea_orm::ActiveValue::Set;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, NotSet, PaginatorTrait, QueryFilter};
 use uuid::Uuid;
 
+use crate::service::has_tenant;
+use crate::service::sys::ADMIN_ID;
 use common::db::get_db;
 use entity::sys_role::{ActiveModel, Column as SysRoleColumn, Entity as SysRole};
 use entity::sys_tenant::{Column as SysTenantColumn, Entity as SysTenant};
@@ -15,8 +17,6 @@ use models::dto::sys::response::sys_role::ResponseRole;
 use models::dto::sys::response::sys_tenant::ResponseTenant;
 use models::dto::{handler_page, PageResult};
 use sea_orm::QueryOrder;
-use crate::service::has_tenant;
-use crate::service::sys::ADMIN_ID;
 
 /// 根据角色编号查询角色数据
 /// @param id 角色编号
@@ -178,7 +178,6 @@ pub async fn update_status(id: String, status: i32) -> Result<String> {
     }
 }
 
-
 /// 查询角色列表
 /// @param data 类型SearchRoleDto
 pub async fn search(user: ResponseUser, data: SearchRoleDto) -> Result<PageResult<ResponseRole>> {
@@ -244,10 +243,10 @@ pub async fn search(user: ResponseUser, data: SearchRoleDto) -> Result<PageResul
         let tenant_id = role.tenant_id.clone();
         let mut response_role: ResponseRole = role.into();
         if let Some(id) = tenant_id {
-            let tenant = tenants.get(&id).and_then(|item|Some(item.clone()));
+            let tenant = tenants.get(&id).cloned();
             response_role.tenant = tenant;
         }
-        
+
         result_list.push(response_role);
     }
     let result = PageResult::new(result_list, total, pages, page_no);
