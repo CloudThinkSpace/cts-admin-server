@@ -1,7 +1,6 @@
 use async_trait::async_trait;
 use std::collections::BTreeMap;
 
-use crate::file_util::create_time_dir;
 use axum::body::Bytes;
 use axum::extract::multipart::Field;
 use axum::extract::Multipart;
@@ -19,17 +18,23 @@ use crate::request::{CsvParse, CtsFile, FileParse};
 
 #[async_trait]
 impl FileParse for Multipart {
+    /// 解析上传文件
+    /// @param path 上传的位置
+    /// @return 返回form信息和文件列表
     async fn parse(
         &mut self,
         path: &str,
     ) -> anyhow::Result<(BTreeMap<String, Bytes>, Vec<CtsFile>)> {
+        // 上传后的文件列表
         let mut file_paths = Vec::new();
         let mut result = BTreeMap::new();
+        // 遍历字段
         while let Some(field) = self.next_field().await.unwrap() {
-            // 处理文件
+            // 判断是否为文件
             if let Some(filename) = field.file_name() {
-                let file_path = filename.to_string();
-                let cts_file = stream_to_file(path, &file_path, field).await?;
+                let filename = filename.to_string();
+                // 读取数据返回ctsfile对象
+                let cts_file = stream_to_file(path, &filename, field).await?;
                 file_paths.push(cts_file)
             } else {
                 let name = field.name().unwrap().to_string();
@@ -80,25 +85,31 @@ where
     }
 
     async {
+        // 转换错误类型
         let body_with_io_error = stream.map_err(|err| io::Error::new(io::ErrorKind::Other, err));
+        // 流读取对象
         let body_reader = StreamReader::new(body_with_io_error);
         futures::pin_mut!(body_reader);
-        // 分解
+        // 分解文件
         let files: Vec<&str> = filename.split('.').collect();
+        // 判断是否为文件
         if files.len() != 2 {
             return Err(io::Error::new(
                 io::ErrorKind::Other,
-                "上次文件错误，该文件没有后缀",
+                "上传文件错误，该文件没有后缀",
             ));
         }
+        // 文件扩展名
         let ext = files[1];
+        // 重命名文件
         let new_filename = format!("{}.{}", Uuid::new_v4(), ext);
-        let path_buf = create_time_dir(path).await?;
-        let path_buf = std::path::Path::new(&path_buf).join(new_filename);
+        // 创建日期目录
+        // let path_buf = create_time_dir(path).await?;
+        let path_buf = std::path::Path::new(&path).join(new_filename);
         let mut file = BufWriter::new(File::create(path_buf.clone()).await?);
-
+        // 写入文件
         io::copy(&mut body_reader, &mut file).await?;
-
+        // 组织数据
         Ok(CtsFile {
             path: path_buf.display().to_string(),
             filename: filename.to_string(),
@@ -142,4 +153,3 @@ fn path_is_valid(path: &str) -> bool {
 
     components.count() == 1
 }
-

@@ -20,3 +20,5 @@ anyhow.workspace = true
 axum = { workspace = true, features = ["multipart"] }
 futures.workspace = true
 uuid = { workspace = true, features = ["v4"] }
+csv.workspace = true
+

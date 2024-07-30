@@ -9,6 +9,7 @@ use uuid::Uuid;
 use common::db::get_db;
 use common::error::CtsError;
 use entity::sys_menu::{ActiveModel, Column as SysMenuColumn, Entity as SysMenu};
+use entity::sys_role_menu::{Column as SysRoleMenuColumn, Entity as SysRoleMenu};
 use models::dto::sys::request::sys_menu::{AddMenuDto, SearchMenuDto, UpdateMenuDto};
 use models::dto::sys::response::sys_menu::{child_tree, root_tree, ResponseMenu};
 
@@ -42,11 +43,18 @@ pub async fn delete_by_id(id: String, force: bool) -> Result<String> {
         if SYSTEM_MENU == data.default_menu {
             bail!("系统菜单无法删除".to_string())
         } else {
+            let tx = db.begin().await?;
+            // 删除授权数据
+            SysRoleMenu::delete_many()
+                .filter(SysRoleMenuColumn::MenuId.eq(id.clone()))
+                .exec(&tx)
+                .await?;
+
             // 判断是否强制删除，如果是删除数据，如果不是更新删除字段
-            match force {
+            let result = match force {
                 true => {
                     // 删除菜单
-                    let delete_result = SysMenu::delete_by_id(id).exec(&db).await?;
+                    let delete_result = SysMenu::delete_by_id(id).exec(&tx).await?;
                     Ok(format!("{}", delete_result.rows_affected))
                 }
                 false => {
@@ -54,10 +62,12 @@ pub async fn delete_by_id(id: String, force: bool) -> Result<String> {
                     let mut current: ActiveModel = data.into();
                     current.deleted_at = Set(Some(Local::now().naive_local()));
                     // 更新删除字段数据
-                    let update_result = current.update(&db).await?;
+                    let update_result = current.update(&tx).await?;
                     Ok(update_result.id)
                 }
-            }
+            };
+            tx.commit().await?;
+            result
         }
     } else {
         bail!("该菜单不存在".to_string())

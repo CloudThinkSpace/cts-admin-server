@@ -1,17 +1,23 @@
-use anyhow::{bail, Result};
+use anyhow::{bail, Ok, Result};
 use axum::extract::Multipart;
 use chrono::Local;
-use sea_orm::{ActiveModelTrait, ColumnTrait, ConnectionTrait, EntityTrait, NotSet, PaginatorTrait, QueryFilter, QuerySelect, TransactionTrait};
+use common::file::csv::Csv;
 use sea_orm::ActiveValue::Set;
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, EntityTrait, NotSet, PaginatorTrait,
+    QueryFilter, QuerySelect, TransactionTrait,
+};
 use uuid::Uuid;
 
 use common::db::{create_table_sql, get_db, insert_data_sql};
-use entity::form_template::{Entity as FormTemplate, Column as FormTemplateColumn};
+use entity::form_template::{Column as FormTemplateColumn, Entity as FormTemplate};
 use entity::project::{ActiveModel, Column as ProjectColumn, Entity as Project};
-use models::dto::{handler_page, PageResult};
-use models::dto::cts::request::project::{SearchProjectDto, UpdateProjectDto};
+use models::dto::cts::request::project::{AddProjectDto, SearchProjectDto, UpdateProjectDto};
 use models::dto::cts::response::project::ResponseProject;
-use project_form::form::form_util::{filter_code_lon_lat, handler_form_data, handler_form_header, parse};
+use models::dto::{handler_page, PageResult};
+use project_form::form::form_util::{
+    filter_code_lon_lat, handler_form_data, handler_form_header, parse,
+};
 use project_form::project::parse_check_project;
 use project_form::request::CsvParse;
 
@@ -22,10 +28,11 @@ pub async fn get_by_id(id: String) -> Result<Option<ResponseProject>> {
     let result = Project::find_by_id(id.clone())
         // 保障删除字段为空
         .filter(ProjectColumn::DeletedAt.is_null())
-        .one(&db).await?;
+        .one(&db)
+        .await?;
     match result {
         None => {
-            bail!("编号：{}，数据不存在",id)
+            bail!("编号：{}，数据不存在", id)
         }
         Some(data) => {
             // formTemplate数据
@@ -42,8 +49,9 @@ pub async fn get_by_id(id: String) -> Result<Option<ResponseProject>> {
                     FormTemplateColumn::CreatedAt,
                     FormTemplateColumn::UpdatedAt,
                 ])
-                .one(&db).await?;
-            if let Some(form)= form_template_model {
+                .one(&db)
+                .await?;
+            if let Some(form) = form_template_model {
                 let form_template = form.into();
                 project.form_template = Some(form_template);
             }
@@ -83,6 +91,97 @@ pub async fn delete_by_id(id: String, force: bool) -> Result<String> {
     }
 }
 
+pub async fn add_project(data: AddProjectDto) -> Result<String> {
+    let db = get_db().await;
+    //  读取文件属性
+    let file_path = data.file.clone();
+    let csv = Csv::read(&file_path)?;
+    // 查询表单数据
+    let form_template = FormTemplate::find_by_id(data.form_template_id.clone())
+        .one(&db)
+        .await?;
+    // 表单字符串
+    let form_str = match form_template {
+        None => {
+            bail!("表单不存在")
+        }
+        Some(form) => form.content.unwrap(),
+    };
+    // 解析表单数据，转换成表单对象
+    let form_template = parse(&form_str)?;
+    // 获取事务对象
+    let tx = db.begin().await?;
+    // 数据表名
+    let mut data_table_name = String::from("data_");
+    // 任务表名
+    let mut task_table_name = String::from("task_");
+    // 数据源uuid
+    let uuid = Uuid::new_v4().to_string().replace('-', "");
+    // 数据表和任务表拼接uuid
+    data_table_name.push_str(&uuid);
+    task_table_name.push_str(&uuid);
+    // 数据表字段，过滤掉无用字段
+    let fields: Vec<String> = form_template
+        .form
+        .questions
+        .into_iter()
+        .filter(|item| item.r#type != "SectionType")
+        .map(|item| item.name)
+        .collect();
+    // 根据字段列表，创建数据表sql
+    let data_sql = create_table_sql(&data_table_name, &fields, true);
+    // 根据字段列表，创建任务表sql
+    let task_sql = create_table_sql(&task_table_name, &csv.header, true);
+    // 创建数据表和任务表
+    tx.execute_unprepared(&data_sql).await?;
+    tx.execute_unprepared(&task_sql).await?;
+    // 处理表头，如果有跟公共字段重复的，重命名字段，并且添加公共表字段
+    let headers = handler_form_header(&csv.header);
+    // 创建任务字段列表
+    let fields_common_index = vec![data.task_code.clone(), data.task_lon.clone(), data.task_lat];
+    // 找出code、lon、lat位置列表
+    let index_common = filter_code_lon_lat(&headers, &fields_common_index);
+    // 收集插入数据sql
+    let mut insert_sqls = Vec::new();
+    // 遍历数据列表
+    for csv_datum in csv.data.iter() {
+        // 转换数据
+        let columns = handler_form_data(csv_datum, &index_common);
+        // 生成插入数据sql
+        let insert_sql = insert_data_sql(&task_table_name, &headers, &columns);
+        // 收集sql
+        insert_sqls.push(insert_sql);
+    }
+    // 遍历sql列表
+    for insert_sql in insert_sqls.iter() {
+        // 执行插入数据sql
+        tx.execute_unprepared(insert_sql).await?;
+    }
+    // 读入任务数据后赋值该变量
+    let total = csv.data.len();
+    // 创建项目对象
+    let current: ActiveModel = ActiveModel {
+        id: Set(Uuid::new_v4().to_string()),
+        name: Set(data.name),
+        code: Set(data.code),
+        form_template_id: Set(data.form_template_id),
+        data_table_name: Set(uuid),
+        total: Set(total as i32),
+        r#type: Set(data.r#type),
+        remark: Set(data.remark),
+        status: Set(data.status),
+        description: Set(data.description),
+        created_at: Set(Local::now().naive_local()),
+        updated_at: NotSet,
+        deleted_at: NotSet,
+    };
+    // 插入项目数据到数据库
+    let add_role = current.insert(&tx).await?;
+    // 提交事务
+    tx.commit().await?;
+    Ok(add_role.id)
+}
+
 /// 添加项目
 /// @param 项目对象
 pub async fn add(mut multipart: Multipart) -> Result<String> {
@@ -104,9 +203,7 @@ pub async fn add(mut multipart: Multipart) -> Result<String> {
         None => {
             bail!("表单不存在")
         }
-        Some(form) => {
-            form.content.unwrap()
-        }
+        Some(form) => form.content.unwrap(),
     };
     // 解析表单数据，转换成表单对象
     let form_template = parse(&form_str)?;
@@ -122,7 +219,13 @@ pub async fn add(mut multipart: Multipart) -> Result<String> {
     data_table_name.push_str(&uuid);
     task_table_name.push_str(&uuid);
     // 数据表字段，过滤掉无用字段
-    let fields: Vec<String> = form_template.form.questions.into_iter().filter(|item| item.r#type!= "SectionType").map(|item| item.name).collect();
+    let fields: Vec<String> = form_template
+        .form
+        .questions
+        .into_iter()
+        .filter(|item| item.r#type != "SectionType")
+        .map(|item| item.name)
+        .collect();
     // 根据字段列表，创建数据表sql
     let data_sql = create_table_sql(&data_table_name, &fields, true);
     // 根据字段列表，创建任务表sql
@@ -133,15 +236,11 @@ pub async fn add(mut multipart: Multipart) -> Result<String> {
     // 处理表头，如果有跟公共字段重复的，重命名字段，并且添加公共表字段
     let headers = handler_form_header(&csv_headers);
     // 创建任务字段列表
-    let fields_common_index = vec![
-        data.task_code.clone(),
-        data.task_lon.clone(),
-        data.task_lat
-    ];
+    let fields_common_index = vec![data.task_code.clone(), data.task_lon.clone(), data.task_lat];
     // 找出code、lon、lat位置列表
-    let index_common = filter_code_lon_lat(&headers,&fields_common_index);
+    let index_common = filter_code_lon_lat(&headers, &fields_common_index);
     // 收集插入数据sql
-    let mut  insert_sqls = Vec::new();
+    let mut insert_sqls = Vec::new();
     // 遍历数据列表
     for csv_datum in csv_data.iter() {
         // 转换数据
@@ -259,14 +358,13 @@ pub async fn search(data: SearchProjectDto) -> Result<PageResult<ResponseProject
     let total = select.clone().count(&db).await?;
     let (page_no, page_size) = handler_page(data.page);
     // 分页对象
-    let paginate = select
-        .paginate(&db, page_size);
+    let paginate = select.paginate(&db, page_size);
     // 页数
     let pages = paginate.num_pages().await?;
 
     // 查询Api数据
-    let list = paginate.
-        fetch_page(page_no - 1)
+    let list = paginate
+        .fetch_page(page_no - 1)
         .await?
         .into_iter()
         .map(|item| item.into())

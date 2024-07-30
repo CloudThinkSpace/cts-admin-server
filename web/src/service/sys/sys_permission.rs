@@ -108,6 +108,31 @@ pub async fn search_api(role_id: String) -> Result<Vec<String>> {
     Ok(result)
 }
 
+pub async fn get_api_ids(role_id: String) -> Result<Vec<String>> {
+    let db = get_db().await;
+    let result: Vec<String> = SysRoleApi::find()
+        .filter(SysRoleApiColumn::RoleId.eq(role_id))
+        .select_only()
+        .column(SysRoleApiColumn::ApiId)
+        .into_tuple()
+        .all(&db)
+        .await?;
+
+    Ok(result)
+}
+
+pub async fn get_menu_ids(role_id: String) -> Result<Vec<String>> {
+    let db = get_db().await;
+    let result: Vec<String> = SysRoleMenu::find()
+        .filter(SysRoleMenuColumn::RoleId.eq(role_id))
+        .select_only()
+        .column(SysRoleMenuColumn::MenuId)
+        .into_tuple()
+        .all(&db)
+        .await?;
+    Ok(result)
+}
+
 pub async fn search_menu(role_id: String) -> Result<Vec<ResponseMenu>> {
     let db = get_db().await;
     let result: Vec<ResponseMenu> = SysMenu::find()

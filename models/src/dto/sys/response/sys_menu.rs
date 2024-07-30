@@ -10,23 +10,42 @@ const SYSTEM_PARENT_MENU_ID: &str = "";
 #[serde(rename_all = "camelCase")]
 pub struct Meta {
     pub title: String,
+    pub dynamic_level: Option<i32>,
+    pub real_path: Option<String>,
+    pub ignore_auth: Option<bool>,
+    pub roles: Option<Vec<String>>,
+    pub ignore_keep_alive: Option<bool>,
+    pub affix: Option<bool>,
     pub icon: Option<String>,
-    pub single: Option<String>,
-    pub img: Option<String>,
-    pub affix: Option<String>,
-    pub roles: Option<String>,
-    pub is_link: Option<String>,
-    pub hide_tab: Option<bool>,
-    pub order_no: Option<i64>,
     pub frame_src: Option<String>,
+    pub transition_name: Option<String>,
+    pub hide_breadcrumb: Option<bool>,
+    pub carry_param: Option<bool>,
+    pub hide_children_in_menu: Option<bool>,
+    pub current_active_menu: Option<String>,
+    pub hide_tab: Option<bool>,
+    pub hide_menu: Option<bool>,
+    pub order_no: Option<i64>,
+    pub ignore_route: Option<bool>,
+    pub hide_path_for_children: Option<bool>,
 }
 
 impl Meta {
-    pub fn new(title: String, icon: Option<String>, order_no: Option<i64>) -> Self {
+    pub fn new(
+        title: String,
+        icon: Option<String>,
+        order_no: Option<i64>,
+        hide_menu: Option<bool>,
+        ignore_keep_alive: Option<bool>,
+        frame_src: Option<String>,
+    ) -> Self {
         Self {
             title,
             icon,
             order_no,
+            hide_menu,
+            ignore_keep_alive,
+            frame_src,
             ..Default::default()
         }
     }
@@ -38,14 +57,10 @@ pub struct ResponseMenu {
     pub id: String,
     pub name: String,
     pub parent_id: String,
-    pub sort: i64,
     pub path: String,
     pub meta: Meta,
     pub component: String,
-    pub active_name: Option<String>,
-    pub keep_alive: bool,
     pub default_menu: bool,
-    pub menu_level: i64,
     pub description: Option<String>,
     pub remark: Option<String>,
     #[serde(with = "date_time_format")]
@@ -84,17 +99,20 @@ impl From<Model> for ResponseMenu {
             path: value.path,
             parent_id: value.parent_id,
             component: value.component,
-            active_name: value.active_name,
-            keep_alive: value.keep_alive,
             default_menu: value.default_menu,
-            menu_level: value.menu_level,
             description: value.description,
             remark: value.remark,
             created_at: value.created_at,
             updated_at: value.updated_at,
             children: None,
-            sort: value.sort,
-            meta: Meta::new(value.title, value.icon, Some(value.sort)),
+            meta: Meta::new(
+                value.title,
+                value.icon,
+                Some(value.sort),
+                Some(value.hidden),
+                Some(value.keep_alive),
+                None,
+            ),
         }
     }
 }

@@ -1,14 +1,19 @@
 use anyhow::{bail, Result};
 use chrono::Local;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, NotSet, PaginatorTrait, QueryFilter};
 use sea_orm::ActiveValue::Set;
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, EntityTrait, Iterable, NotSet, PaginatorTrait, QueryFilter,
+    QuerySelect,
+};
 use uuid::Uuid;
 
 use common::db::get_db;
 use entity::form_template::{ActiveModel, Column as FormTemplateColumn, Entity as FormTemplate};
-use models::dto::{handler_page, PageResult};
-use models::dto::cts::request::form_template::{AddFormTemplateDto, SearchFormTemplateDto, UpdateFormTemplateDto};
+use models::dto::cts::request::form_template::{
+    AddFormTemplateDto, SearchFormTemplateDto, UpdateFormTemplateDto,
+};
 use models::dto::cts::response::form_template::ResponseFormTemplate;
+use models::dto::{handler_page, PageResult};
 
 /// 根据表单编号查询数据
 /// @param id 编号
@@ -17,10 +22,11 @@ pub async fn get_by_id(id: String) -> Result<Option<ResponseFormTemplate>> {
     let result = FormTemplate::find_by_id(id.clone())
         // 保障删除字段为空
         .filter(FormTemplateColumn::DeletedAt.is_null())
-        .one(&db).await?;
+        .one(&db)
+        .await?;
     match result {
         None => {
-            bail!("编号：{}，数据不存在",id)
+            bail!("编号：{}，数据不存在", id)
         }
         Some(data) => {
             let role: ResponseFormTemplate = data.into();
@@ -41,9 +47,7 @@ pub async fn delete_by_id(id: String, force: bool) -> Result<String> {
         match force {
             true => {
                 // 删除表单
-                let delete_result = FormTemplate::delete_by_id(id)
-                    .exec(&db)
-                    .await?;
+                let delete_result = FormTemplate::delete_by_id(id).exec(&db).await?;
                 Ok(format!("{}", delete_result.rows_affected))
             }
             false => {
@@ -164,18 +168,21 @@ pub async fn search(data: SearchFormTemplateDto) -> Result<PageResult<ResponseFo
     }
     // 排除已删除角色
     select = select.filter(FormTemplateColumn::DeletedAt.is_null());
+    // 设置返回字段
+    select = select.select_only().columns(
+        FormTemplateColumn::iter().filter(|col| !matches!(col, FormTemplateColumn::Content)),
+    );
     // 查询数据数量
     let total = select.clone().count(&db).await?;
     let (page_no, page_size) = handler_page(data.page);
     // 分页对象
-    let paginate = select
-        .paginate(&db, page_size);
+    let paginate = select.paginate(&db, page_size);
     // 页数
     let pages = paginate.num_pages().await?;
 
     // 查询Api数据
-    let list = paginate.
-        fetch_page(page_no - 1)
+    let list = paginate
+        .fetch_page(page_no - 1)
         .await?
         .into_iter()
         .map(|item| item.into())
@@ -183,3 +190,4 @@ pub async fn search(data: SearchFormTemplateDto) -> Result<PageResult<ResponseFo
     let result = PageResult::new(list, total, pages, page_no);
     Ok(result)
 }
+

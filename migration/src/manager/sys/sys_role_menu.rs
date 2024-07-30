@@ -1,9 +1,9 @@
 use sea_orm::{ConnectionTrait, DbErr, Statement};
 use sea_orm_migration::SchemaManager;
 
-use crate::{ColumnDef, DeriveIden, ForeignKey, Table, TableOperation, Value};
 use crate::manager::sys::sys_menu::SysMenu;
 use crate::manager::sys::sys_role::SysRole;
+use crate::{ColumnDef, DeriveIden, ForeignKey, Table, TableOperation, Value};
 
 #[derive(DeriveIden)]
 pub enum SysRoleMenu {
@@ -36,35 +36,42 @@ impl TableOperation for SysRoleMenu {
     }
 
     async fn create_index(&self, manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        // 创建 角色外键
+        manager
+            .create_foreign_key(
+                ForeignKey::create()
+                    .name("Fk_role-menu_role_id")
+                    .from(SysRoleMenu::Table, SysRoleMenu::RoleId)
+                    .to(SysRole::Table, SysRole::Id)
+                    .to_owned(),
+            )
+            .await?;
 
         // 创建 角色外键
-        manager.create_foreign_key(
-            ForeignKey::create()
-                .name("Fk_role-menu_role_id")
-                .from(SysRoleMenu::Table, SysRoleMenu::RoleId)
-                .to(SysRole::Table, SysRole::Id)
-                .to_owned()
-        ).await?;
-
-        // 创建 角色外键
-        manager.create_foreign_key(
-            ForeignKey::create()
-                .name("Fk_role-menu_menu_id")
-                .from(SysRoleMenu::Table, SysRoleMenu::MenuId)
-                .to(SysMenu::Table, SysMenu::Id)
-                .to_owned()
-        ).await
-
+        manager
+            .create_foreign_key(
+                ForeignKey::create()
+                    .name("Fk_role-menu_menu_id")
+                    .from(SysRoleMenu::Table, SysRoleMenu::MenuId)
+                    .to(SysMenu::Table, SysMenu::Id)
+                    .to_owned(),
+            )
+            .await
     }
 
     async fn drop_table(&self, manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(SysRoleMenu::Table).if_exists().to_owned()).await?;
+            .drop_table(
+                Table::drop()
+                    .table(SysRoleMenu::Table)
+                    .if_exists()
+                    .to_owned(),
+            )
+            .await?;
         Ok(())
     }
 
     async fn insert_data(&self, manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-
         let db = manager.get_connection();
 
         let data = create_data();
@@ -88,6 +95,14 @@ impl TableOperation for SysRoleMenu {
 
 fn create_data() -> Vec<[Value; 3]> {
     let mut result = Vec::new();
+
+    // 首页数据
+    let data_home: [Value; 3] = [
+        uuid::Uuid::new_v4().to_string().into(),
+        "1".into(),
+        "0".into(),
+    ];
+
     // 用户菜单数据
     let data_user: [Value; 3] = [
         uuid::Uuid::new_v4().to_string().into(),
@@ -132,6 +147,8 @@ fn create_data() -> Vec<[Value; 3]> {
         "1".into(),
         "7".into(),
     ];
+
+    result.push(data_home);
     result.push(data_user);
     result.push(data_role);
     result.push(data_menu);

@@ -108,7 +108,31 @@ impl TableOperation for SysMenu {
             .await
     }
 
-    async fn create_index(&self, _manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+    async fn create_index(&self, manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        // 创建name 唯一键
+        manager
+            .create_index(
+                Index::create()
+                    .table(SysMenu::Table)
+                    .if_not_exists()
+                    .name("unique_menu_name")
+                    .col(SysMenu::Name)
+                    .unique()
+                    .to_owned(),
+            )
+            .await?;
+        // 创建path 唯一键
+        manager
+            .create_index(
+                Index::create()
+                    .table(SysMenu::Table)
+                    .if_not_exists()
+                    .name("unique_menu_path")
+                    .col(SysMenu::Path)
+                    .unique()
+                    .to_owned(),
+            )
+            .await?;
         Ok(())
     }
 

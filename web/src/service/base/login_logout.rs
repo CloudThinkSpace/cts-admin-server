@@ -8,8 +8,8 @@ use common::auth::jwt::{decode_token, encode_token};
 use common::db::get_db;
 use common::md5::check_password;
 use entity::sys_role::Entity as SysRole;
-use entity::sys_user::{Column as SysUserColumn, Entity as SysUser};
 use entity::sys_tenant::Entity as SysTenant;
+use entity::sys_user::{Column as SysUserColumn, Entity as SysUser};
 use models::dto::sys::response::base::{ResponseToken, Token};
 use models::dto::sys::response::sys_user::ResponseUser;
 
@@ -21,6 +21,10 @@ pub async fn login(username: String, password: String) -> Result<ResponseToken> 
         .one(&db)
         .await?;
     if let Some(data) = user {
+        // 判断用户是否停用
+        if data.status == 1 {
+            bail!("用户已停用，无法登录")
+        }
         // 获取用户密码
         let db_password = data.password.clone();
         // 验证密码

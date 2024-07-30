@@ -9,11 +9,27 @@ use serde_json::Value;
 use crate::db::db_type::DbType;
 use crate::db::form::{parse_value_to_insert_sql, parse_value_to_update_sql, FormCommonField};
 
-pub struct CtsSelect(String, Option<String>);
+/// @param 参数1，表名
+/// @param 参数2，select 语句
+/// @param 参数3，where 参数
+pub struct CtsSelect(String, Option<String>, Option<String>);
 
 impl CtsSelect {
     pub fn table(table_name: &str) -> Self {
-        Self(table_name.to_string(), None)
+        Self(table_name.to_string(), None, None)
+    }
+
+    pub fn filter(&mut self, express: &str) -> &Self {
+        let expr = match self.2.clone() {
+            Some(mut data) => {
+                data.push_str(&format!(" and {}", express));
+                data
+            }
+            None => express.to_string(),
+        };
+
+        self.2 = Some(expr);
+        self
     }
 
     /// 根据编号进行查询
@@ -57,7 +73,7 @@ impl CtsSelect {
     /// @param id 数据编号
     /// @param query_delete 是否查询被删除的数据
     /// return Self
-    pub fn find_by_id(&mut self, id: &str, query_delete: bool) -> Self {
+    pub fn find_by_id(&mut self, id: &str, query_delete: bool) -> &Self {
         self.1 = match query_delete {
             true => Some(format!("select * from {} where id='{}'", self.0, id)),
             false => Some(format!(
@@ -65,19 +81,46 @@ impl CtsSelect {
                 self.0, id
             )),
         };
-        Self(self.0.clone(), self.1.clone())
+        self
     }
 
     /// 查询数据
-    pub fn find(&mut self) -> Self {
+    pub fn find(&mut self) -> &Self {
         self.1 = Some(format!("select * from {} where deleted_at is null order by updated_at desc nulls last, created_at desc", self.0));
-        Self(self.0.clone(), self.1.clone())
+        self
+    }
+
+    /// 查询表结构
+    pub fn find_table_field(&mut self) -> &Self {
+        let sql = r#"
+            select
+	a.attnum as "id",
+	a.attname as "name",
+	concat_ws('', t.typname, SUBSTRING(format_type(a.atttypid, a.atttypmod) from '\(.*\)')) as "type"
+from
+	pg_attribute a
+left join pg_description d on
+	d.objoid = a.attrelid
+	and d.objsubid = a.attnum
+left join pg_class c on
+	a.attrelid = c.oid
+left join pg_type t on
+	a.atttypid = t.oid
+where
+	a.attnum >= 0
+	and c.relname = '{}'
+order by
+	c.relname desc,
+	a.attnum asc
+        "#;
+        self.1 = Some(sql.replace("{}", &self.0));
+        self
     }
 
     /// 删除数据根据数据编号，
     /// @param id 数据编号
     /// @param force 是否彻底删除
-    pub fn delete_by_id(&mut self, id: &str, force: bool) -> Self {
+    pub fn delete_by_id(&mut self, id: &str, force: bool) -> &Self {
         self.1 = match force {
             true => Some(format!("DELETE FROM {} WHERE id= '{}'", self.0, id)),
             false => {
@@ -90,22 +133,22 @@ impl CtsSelect {
                 ))
             }
         };
-        Self(self.0.clone(), self.1.clone())
+        self
     }
 
     /// 更新数据
     /// @param id 数据编号
     /// @param data 数据
-    pub fn update(&mut self, id: &str, data: Value) -> Result<Self> {
+    pub fn update(&mut self, id: &str, data: Value) -> Result<&Self> {
         let sql = parse_value_to_update_sql(self.0.clone(), id.to_string(), data, |_| Ok(()))?;
         self.1 = Some(sql);
-        Ok(Self(self.0.clone(), self.1.clone()))
+        Ok(self)
     }
 
     /// 添加数据
     /// @param data 数据
     /// @param hande_id 处理数据编号函数，如果不需要处理使用None
-    pub fn add<F>(&mut self, data: Value, mut hande_id: F) -> Result<Self>
+    pub fn add<F>(&mut self, data: Value, mut hande_id: F) -> Result<&Self>
     where
         F: FnMut(&String),
     {
@@ -120,7 +163,7 @@ impl CtsSelect {
         )?;
         self.1 = Some(sql);
         hande_id(&id);
-        Ok(Self(self.0.clone(), self.1.clone()))
+        Ok(self)
     }
     /// 查询数据，返回单条数据
     pub async fn one(&self, db: &DatabaseConnection) -> Result<Option<Value>> {

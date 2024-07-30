@@ -1,6 +1,6 @@
+use crate::dto::{Order, Page};
 use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
-use crate::dto::{Order, Page};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -26,6 +26,7 @@ pub struct AddProjectDto {
     pub task_code: String,
     pub task_lon: String,
     pub task_lat: String,
+    pub file: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -42,7 +43,6 @@ pub struct SearchProjectDto {
     pub orders: Option<Vec<Order>>,
 }
 
-
 impl Default for AddProjectDto {
     fn default() -> Self {
         Self {
@@ -56,6 +56,8 @@ impl Default for AddProjectDto {
             task_code: "".to_string(),
             task_lon: "".to_string(),
             task_lat: "".to_string(),
+            file: "".to_string(),
         }
     }
 }
+

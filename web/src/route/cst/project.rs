@@ -1,6 +1,6 @@
-use axum::Router;
-use axum::routing::{get, post};
 use crate::handler::cts::project;
+use axum::routing::{get, post};
+use axum::Router;
 
 /// 项目路由
 /// @author tanghy
@@ -13,6 +13,6 @@ pub fn project_route() -> Router {
         .route("/query/:id", get(project::query))
         .route("/search", post(project::search));
 
-    Router::new()
-        .nest("/project", router)
+    Router::new().nest("/project", router)
 }
+
