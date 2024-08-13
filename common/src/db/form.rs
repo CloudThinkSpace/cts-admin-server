@@ -4,6 +4,7 @@ use std::fmt::{Display, Formatter};
 use anyhow::{bail, Result};
 use chrono::Local;
 use serde_json::Value;
+use tracing::info;
 use uuid::Uuid;
 
 use crate::db::{insert_data_sql, update_data_sql};
@@ -161,17 +162,26 @@ where
     validate(&map_data)?;
     let mut headers = Vec::new();
     let mut columns = Vec::new();
+    let mut uuid= "".to_string();
     // 分解字段列表和数据列表
     for (key, item) in map_data.into_iter() {
+        // 判断是否为 id
+        if key == FormCommonField::Id.to_string() {
+            uuid = item.source()
+        }
         headers.push(key);
         columns.push(item);
+
     }
+
     // 插入主键、状态、创建时间
-    headers.insert(0, FormCommonField::Id.to_string());
     headers.push(FormCommonField::CreatedAt.to_string());
-    // 插入主键、状态、时间值
-    let uuid = Uuid::new_v4().to_string();
-    columns.insert(0, Box::new(uuid.clone()));
+    // 判断主键是否存在，不存在插入uuid
+    if !headers.contains(&FormCommonField::Id.to_string()) {
+        headers.insert(0, FormCommonField::Id.to_string());
+        uuid = Uuid::new_v4().to_string();
+        columns.insert(0, Box::new(uuid.clone()));
+    }
     let date = Local::now().naive_local();
     columns.push(Box::new(date));
     // 判断是否添加其他字段，
@@ -182,6 +192,7 @@ where
     }
     // 生成插入数据sql
     let insert_sql = insert_data_sql(&table_name, &headers, &columns);
+    info!("{}", insert_sql);
     Ok((uuid, insert_sql))
 }
 

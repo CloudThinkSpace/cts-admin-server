@@ -19,6 +19,7 @@ use axum::Router;
 use middleware::layers as my_layers;
 use response_utils::res::ResResult;
 
+use self::base::upload_download::image_route;
 use self::sys::sys_table::table_route;
 
 pub mod base;
@@ -77,7 +78,7 @@ fn auth_api() -> Router {
 
 /// 无需认证api
 fn no_auth_api() -> Router {
-    Router::new().merge(login_route())
+    Router::new().merge(login_route()).merge(image_route())
 }
 
 /// 服务错误处理函数

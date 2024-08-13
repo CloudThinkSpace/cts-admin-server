@@ -1,6 +1,6 @@
-use axum::Router;
-use axum::routing::{get, post};
 use crate::handler::base::upload_download;
+use axum::routing::{get, post};
+use axum::Router;
 
 /// 基础路由
 /// @author tanghy
@@ -10,5 +10,7 @@ use crate::handler::base::upload_download;
 pub fn upload_download_route() -> Router {
     Router::new()
         .route("/upload", post(upload_download::upload))
-        .route("/download", get(upload_download::download))
+        .route("/image/*path", get(upload_download::image))
+        .route("/download/*path", get(upload_download::download))
 }
+

@@ -1,54 +1,95 @@
 use anyhow::{bail, Result};
 use chrono::Local;
 use sea_orm::{
-    ConnectionTrait, DatabaseBackend, DatabaseConnection, ExecResult, FromQueryResult, JsonValue,
-    SelectModel, SelectorRaw, Statement,
+    ConnectionTrait, DatabaseBackend, ExecResult, FromQueryResult, JsonValue, SelectModel,
+    SelectorRaw, Statement,
 };
 use serde_json::Value;
 
 use crate::db::db_type::DbType;
-use crate::db::form::{parse_value_to_insert_sql, parse_value_to_update_sql, FormCommonField};
+use crate::db::form::{parse_value_to_insert_sql, parse_value_to_update_sql};
 
 /// @param 参数1，表名
 /// @param 参数2，select 语句
 /// @param 参数3，where 参数
-pub struct CtsSelect(String, Option<String>, Option<String>);
+pub struct CtsSelect {
+    pub table_name: String,
+    pub sql: Option<String>,
+    pub fields: Option<Vec<String>>,
+    pub wheres: Option<String>,
+    pub order_by: Option<String>,
+}
 
 impl CtsSelect {
     pub fn table(table_name: &str) -> Self {
-        Self(table_name.to_string(), None, None)
+        Self {
+            table_name: table_name.to_string(),
+            sql: None,
+            fields: None,
+            wheres: None,
+            order_by: None,
+        }
+    }
+
+    pub fn columns(&mut self, fields: Option<Vec<String>>) -> &Self {
+        self.fields = fields;
+        self
     }
 
     pub fn filter(&mut self, express: &str) -> &Self {
-        let expr = match self.2.clone() {
-            Some(mut data) => {
-                data.push_str(&format!(" and {}", express));
-                data
+        match &self.wheres {
+            Some(wheres) => {
+                self.wheres = Some(format!("{} AND {}", wheres, express));
             }
-            None => express.to_string(),
-        };
+            None => {
+                self.wheres = Some(format!(" WHERE {}", express));
+            }
+        }
+        self
+    }
 
-        self.2 = Some(expr);
+    pub fn defualt_filter(&mut self) -> &Self {
+        match &self.wheres {
+            Some(wheres) => {
+                self.wheres = Some(format!("{} AND {}", wheres, "DELETED_AT IS NULL"));
+            }
+            None => {
+                self.wheres = Some(format!(" WHERE {}", "DELETED_AT IS NULL"));
+            }
+        }
+        self
+    }
+
+    pub fn order_by(&mut self, express: &str) -> &Self {
+        match &self.order_by {
+            Some(order_by) => {
+                self.order_by = Some(format!("{}, {}", order_by, express));
+            }
+            None => {
+                self.order_by = Some(format!("ORDER BY {}", express));
+            }
+        }
         self
     }
 
     /// 根据编号进行查询
     /// @param id 数据编号
-    /// @param query_delete 是否查询被删除的数据
     /// return SelectorRaw
-    pub fn select_by_id(
-        &mut self,
-        id: &str,
-        query_delete: bool,
-    ) -> SelectorRaw<SelectModel<Value>> {
-        let sql = match query_delete {
-            true => {
-                format!("select * from {} where id='{}'", self.0, id)
-            }
-            false => {
+    pub fn select_by_id(&mut self, id: &str) -> SelectorRaw<SelectModel<Value>> {
+        // 条件判断
+        let wheres = self.wheres.clone().unwrap_or(String::from("WHERE 1=1"));
+        let sql = match &self.fields {
+            Some(fields) => {
+                let field_str = fields.join(",");
                 format!(
-                    "select * from {} where deleted_at is null and id='{}'",
-                    self.0, id
+                    "SELECT {} FROM {} {} AND id='{}'",
+                    field_str, self.table_name, wheres, id
+                )
+            }
+            None => {
+                format!(
+                    "SELECT * FROM {} {} AND id='{}'",
+                    self.table_name, wheres, id
                 )
             }
         };
@@ -61,7 +102,24 @@ impl CtsSelect {
 
     /// 查询数据
     pub fn select(&self) -> SelectorRaw<SelectModel<Value>> {
-        let sql = format!("select * from {} where deleted_at is null order by updated_at desc nulls last, created_at desc", self.0);
+        let fields = self
+            .fields
+            .clone()
+            .unwrap_or(vec![String::from('*')])
+            .join(",");
+        let order_by = self.order_by.clone().unwrap_or("".to_string());
+        let sql = match &self.wheres {
+            Some(wheres) => {
+                format!(
+                    "SELECT {} FROM {} {} {} ",
+                    fields, self.table_name, wheres, order_by
+                )
+            }
+            None => {
+                let order_by = self.order_by.clone().unwrap_or("".to_string());
+                format!("SELECT {} FROM {} {}", fields, self.table_name, order_by)
+            }
+        };
         JsonValue::find_by_statement(Statement::from_sql_and_values(
             DatabaseBackend::Postgres,
             sql,
@@ -71,22 +129,50 @@ impl CtsSelect {
 
     /// 根据编号进行查询
     /// @param id 数据编号
-    /// @param query_delete 是否查询被删除的数据
     /// return Self
-    pub fn find_by_id(&mut self, id: &str, query_delete: bool) -> &Self {
-        self.1 = match query_delete {
-            true => Some(format!("select * from {} where id='{}'", self.0, id)),
-            false => Some(format!(
-                "select * from {} where deleted_at is null and id='{}'",
-                self.0, id
-            )),
+    pub fn find_by_id(&mut self, id: &str) -> &Self {
+        // 条件判断
+        let wheres = self.wheres.clone().unwrap_or(String::from("WHERE 1=1"));
+
+        let sql = match &self.fields {
+            Some(fields) => {
+                let field_str = fields.join(",");
+                format!(
+                    "SELECT {} FROM {} {} AND id='{}'",
+                    field_str, self.table_name, wheres, id
+                )
+            }
+            None => {
+                format!(
+                    "SELECT * FROM {} {} AND id='{}'",
+                    self.table_name, wheres, id
+                )
+            }
         };
+        self.sql = Some(sql);
         self
     }
 
     /// 查询数据
     pub fn find(&mut self) -> &Self {
-        self.1 = Some(format!("select * from {} where deleted_at is null order by updated_at desc nulls last, created_at desc", self.0));
+        let fields = self
+            .fields
+            .clone()
+            .unwrap_or(vec![String::from('*')])
+            .join(",");
+        let order_by = self.order_by.clone().unwrap_or("".to_string());
+        let sql = match &self.wheres {
+            Some(wheres) => {
+                format!(
+                    "SELECT {} FROM {} {} {} ",
+                    fields, self.table_name, wheres, order_by
+                )
+            }
+            None => {
+                format!("SELECT {} FROM {} {}", fields, self.table_name, order_by)
+            }
+        };
+        self.sql = Some(sql);
         self
     }
 
@@ -113,7 +199,7 @@ order by
 	c.relname desc,
 	a.attnum asc
         "#;
-        self.1 = Some(sql.replace("{}", &self.0));
+        self.sql = Some(sql.replace("{}", &self.table_name));
         self
     }
 
@@ -121,13 +207,16 @@ order by
     /// @param id 数据编号
     /// @param force 是否彻底删除
     pub fn delete_by_id(&mut self, id: &str, force: bool) -> &Self {
-        self.1 = match force {
-            true => Some(format!("DELETE FROM {} WHERE id= '{}'", self.0, id)),
+        self.sql = match force {
+            true => Some(format!(
+                "DELETE FROM {} WHERE id= '{}'",
+                self.table_name, id
+            )),
             false => {
                 let date = Local::now().naive_local();
                 Some(format!(
                     "UPDATE {} SET DELETED_AT={} WHERE id= '{}'",
-                    self.0,
+                    self.table_name,
                     date.display(),
                     id
                 ))
@@ -140,8 +229,9 @@ order by
     /// @param id 数据编号
     /// @param data 数据
     pub fn update(&mut self, id: &str, data: Value) -> Result<&Self> {
-        let sql = parse_value_to_update_sql(self.0.clone(), id.to_string(), data, |_| Ok(()))?;
-        self.1 = Some(sql);
+        let sql =
+            parse_value_to_update_sql(self.table_name.clone(), id.to_string(), data, |_| Ok(()))?;
+        self.sql = Some(sql);
         Ok(self)
     }
 
@@ -153,21 +243,24 @@ order by
         F: FnMut(&String),
     {
         let (id, sql) = parse_value_to_insert_sql(
-            self.0.clone(),
+            self.table_name.clone(),
             data,
             |_| Ok(()),
-            |hearders, columns| {
-                hearders.push(FormCommonField::Status.to_string());
-                columns.push(Box::new(0));
+            |_hearders, _columns| {
+                // hearders.push(FormCommonField::Status.to_string());
+                // columns.push(Box::new(0));
             },
         )?;
-        self.1 = Some(sql);
+        self.sql = Some(sql);
         hande_id(&id);
         Ok(self)
     }
     /// 查询数据，返回单条数据
-    pub async fn one(&self, db: &DatabaseConnection) -> Result<Option<Value>> {
-        match &self.1 {
+    pub async fn one<'a, C>(&self, db: &'a C) -> Result<Option<Value>>
+    where
+        C: ConnectionTrait,
+    {
+        match &self.sql {
             None => {
                 bail!("请先执行find_by_id")
             }
@@ -183,8 +276,11 @@ order by
         }
     }
     /// 查询所有数据，根据查询条件进行过滤
-    pub async fn all(&self, db: &DatabaseConnection) -> Result<Vec<Value>> {
-        match &self.1 {
+    pub async fn all<'a, C>(&self, db: &'a C) -> Result<Vec<Value>>
+    where
+        C: ConnectionTrait,
+    {
+        match &self.sql {
             None => {
                 bail!("请先执行find方法")
             }
@@ -200,8 +296,11 @@ order by
         }
     }
 
-    pub async fn execute(&self, db: &DatabaseConnection) -> Result<ExecResult> {
-        match &self.1 {
+    pub async fn execute<'a, C>(&self, db: &'a C) -> Result<ExecResult>
+    where
+        C: ConnectionTrait,
+    {
+        match &self.sql {
             None => {
                 bail!("请先执行delete_by_id或者update方法")
             }

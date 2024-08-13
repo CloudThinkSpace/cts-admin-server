@@ -15,10 +15,10 @@ const IS_DATA: bool = false;
 pub async fn get_by_id(table_id: String, id: String) -> Result<Option<Value>> {
     let db = get_db().await;
     let table_name = get_table_name(&table_id, IS_DATA);
-    let result = CtsSelect::table(&table_name)
-        .find_by_id(&id, false)
-        .one(&db)
-        .await?;
+    let mut cts_select = CtsSelect::table(&table_name);
+    // 排除删除的数据
+    cts_select.defualt_filter();
+    let result = cts_select.find_by_id(&id).one(&db).await?;
     Ok(result)
 }
 
@@ -29,7 +29,7 @@ pub async fn delete_by_id(table_id: String, id: String, force: bool) -> Result<S
     // 查询数据是否存在
     let table_name = get_table_name(&table_id, IS_DATA);
     let result = CtsSelect::table(&table_name)
-        .find_by_id(&id, true)
+        .find_by_id(&id)
         .one(&db)
         .await?;
     if result.is_some() {
@@ -67,7 +67,7 @@ pub async fn update(table_id: String, id: String, data: Value) -> Result<String>
     // 查询是否有数据
     let table_name = get_table_name(&table_id, IS_DATA);
     let result = CtsSelect::table(&table_name)
-        .find_by_id(&id, false)
+        .find_by_id(&id)
         .one(&db)
         .await?;
     match result {
@@ -89,12 +89,28 @@ pub async fn update(table_id: String, id: String, data: Value) -> Result<String>
 pub async fn search(table_id: String, data: SearchTask) -> Result<PageResult<Value>> {
     let db = get_db().await;
     let table_name = get_table_name(&table_id, IS_DATA);
-    let select = CtsSelect::table(&table_name).select();
+    let mut cts_select = CtsSelect::table(&table_name);
+    cts_select.columns(data.fields);
+    // 设置查询条件
+    if let Some(wheres) = data.wheres {
+        for where_str in wheres.iter() {
+            cts_select.filter(where_str);
+        }
+    }
+    cts_select.defualt_filter();
+    // 设置排序
+    if let Some(order_bys) = data.orders {
+        for order_by in order_bys.iter() {
+            cts_select.order_by(order_by);
+        }
+    }
+    let select = cts_select.select();
     // 查询数据数量
     let total = select.count(&db).await?;
     let (page_no, page_size) = handler_page(data.page);
     // 创建查询对象
-    let select = CtsSelect::table(&table_name).select();
+    cts_select.order_by("status desc");
+    let select = cts_select.select();
     // 分页对象
     let paginate = select.paginate(&db, page_size);
     // 页数
