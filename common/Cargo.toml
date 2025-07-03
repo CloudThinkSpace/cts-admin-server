@@ -1,0 +1,25 @@
+[package]
+name = "common"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+toml.workspace = true
+sea-orm.workspace = true
+sea-orm-migration.workspace = true
+tokio = { workspace = true, features = ["sync", "full"] }
+tokio-util = { workspace = true, features = ["io"] }
+rust-crypto.workspace = true
+tracing.workspace = true
+jsonwebtoken.workspace = true
+chrono.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+axum = { workspace = true, features = ["multipart"] }
+futures.workspace = true
+uuid = { workspace = true, features = ["v4"] }
+csv.workspace = true
+futures-util.workspace = true
+aliyun-oss-rust-sdk.workspace = true
