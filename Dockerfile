@@ -6,17 +6,16 @@ WORKDIR /
 ENV     RUSTFLAGS="-C target-feature=-crt-static"
 COPY    . .
 RUN     cargo build --bin web --release
-RUN     cargo install sea-orm-cli
-
 
 # Run
 FROM    alpine:3.20
-
+LABEL   version="2.0"
+LABEL   maintainer="tanghy@cloudthink.space"
 RUN     apk update --quiet \
         && apk add -q --no-cache libgcc tini curl openssl
 
 COPY    --from=compiler /target/release/web /app/web
-COPY    --from=compiler /config.toml /app/config.toml
+#COPY    --from=compiler /config.toml /app/config.toml
 COPY    --from=compiler /.env /app/.env
 
 EXPOSE  3000

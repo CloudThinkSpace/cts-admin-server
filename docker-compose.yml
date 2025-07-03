@@ -2,9 +2,11 @@ version: "3"
 
 services:
   cts-admin-server:
-    # build: ./
+#    build:
+#      context: ./
+#      dockerfile: Dockerfile
     container_name: cts-admin-server
-    image: tanghy/cts-server
+    image: tanghy/cts-server:2.0
     restart: unless-stopped
     depends_on:
       - postgis
@@ -12,7 +14,8 @@ services:
       - "3000:3000"
     networks:
       - net_cts # 使用指定声明的网咯
-
+    volumes: # 将本地目录映射到容器内的目录
+      - ./volume/server/config.toml:/app/config.toml   # 将本地 data 目录映射到容器内的 /var/lib/postgresql/data 目录
   # cts-admin-web:
   #   container_name: cts-admin-web
   #   image: nginx:1.17.9-alpine
